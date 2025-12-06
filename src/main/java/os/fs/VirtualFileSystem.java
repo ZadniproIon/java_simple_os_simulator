@@ -1,4 +1,4 @@
-﻿package os.fs;
+package os.fs;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

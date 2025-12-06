@@ -1,6 +1,5 @@
-﻿package os.apps;
+package os.apps;
 
-import java.nio.file.Files;
 import java.util.Optional;
 
 import javafx.geometry.Insets;
@@ -14,8 +13,8 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.text.Text;
-import os.fs.VirtualFile;
-import os.fs.VirtualFileSystem;
+import os.vfs.VirtualFile;
+import os.vfs.VirtualFileSystem;
 
 /**
  * Very small text editor backed by the virtual file system.
@@ -78,8 +77,7 @@ public class NotepadApp implements OSApplication {
     }
 
     private void openFileDialog() {
-        TextInputDialog dialog = new TextInputDialog(currentFile != null ?
-                fileSystem.getRoot().getPath().relativize(currentFile.getPath()).toString() : "");
+        TextInputDialog dialog = new TextInputDialog(currentFile != null ? currentFile.getPath() : "");
         dialog.setTitle("Open File");
         dialog.setHeaderText("Enter a path relative to the virtual root");
         dialog.setContentText("Path:");
@@ -87,7 +85,7 @@ public class NotepadApp implements OSApplication {
         result.ifPresent(path -> {
             try {
                 VirtualFile file = fileSystem.resolveFile(path);
-                if (!Files.exists(file.getPath())) {
+                if (!fileSystem.exists(file)) {
                     showError("File not found");
                     return;
                 }
@@ -129,7 +127,7 @@ public class NotepadApp implements OSApplication {
         }
         try {
             VirtualFile file = fileSystem.resolveFile(result.get());
-            boolean shouldWrite = Files.notExists(file.getPath());
+            boolean shouldWrite = !fileSystem.exists(file);
             if (!shouldWrite) {
                 Alert alert = new Alert(Alert.AlertType.CONFIRMATION,
                         "File exists. Overwrite?", ButtonType.YES, ButtonType.NO);

@@ -1,0 +1,7 @@
+To run this thing:
+
+// (optional if nothing changed)
+mvn -q -DskipTests compile
+
+// to start the app
+mvn javafx:run

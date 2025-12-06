@@ -1,4 +1,4 @@
-﻿package os.core;
+package os.core;
 
 /**
  * Represents a coarse memory page owned by a process.

@@ -1,4 +1,4 @@
-﻿package os.core;
+package os.core;
 
 /**
  * Simple user description for the login screen.

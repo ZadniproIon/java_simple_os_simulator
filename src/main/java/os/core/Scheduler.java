@@ -1,4 +1,4 @@
-﻿package os.core;
+package os.core;
 
 import java.util.ArrayDeque;
 import java.util.Deque;

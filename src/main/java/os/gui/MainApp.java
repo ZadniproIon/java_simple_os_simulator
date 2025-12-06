@@ -1,5 +1,7 @@
-﻿package os.gui;
+package os.gui;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -10,27 +12,35 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import os.core.AuthManager;
-import os.core.MemoryManager;
-import os.core.OSKernel;
-import os.core.Scheduler;
-import os.fs.VirtualFileSystem;
+import javafx.util.Duration;
+import os.memory.MemoryManager;
+import os.process.OSKernel;
+import os.process.Scheduler;
+import os.process.SchedulingAlgorithm;
+import os.users.AuthManager;
+import os.vfs.VirtualFileSystem;
 
 /**
  * JavaFX entry point. Shows login first, then the desktop simulation.
+ * <p>
+ * This class wires the GUI to the back-end {@link OSKernel} by driving
+ * the kernel's {@code tick()} method with a JavaFX {@link Timeline}.
  */
 public class MainApp extends Application {
     private Stage primaryStage;
     private OSKernel kernel;
+    private Timeline cpuClock;
 
     @Override
     public void start(Stage primaryStage) {
         this.primaryStage = primaryStage;
-        Scheduler scheduler = new Scheduler();
+
+        // Construct the core OS components.
         MemoryManager memoryManager = new MemoryManager(1024, 64);
-        VirtualFileSystem vfs = new VirtualFileSystem("virtual_fs");
+        Scheduler scheduler = new Scheduler(SchedulingAlgorithm.ROUND_ROBIN);
         AuthManager authManager = new AuthManager();
-        kernel = new OSKernel(scheduler, memoryManager, vfs, authManager);
+        VirtualFileSystem vfs = new VirtualFileSystem("virtual_fs");
+        kernel = new OSKernel(memoryManager, scheduler, authManager, vfs);
 
         primaryStage.setTitle("Simple OS Simulator");
         showLoginScreen();
@@ -51,6 +61,8 @@ public class MainApp extends Application {
         loginButton.setOnAction(e -> {
             boolean success = kernel.getAuthManager().login(usernameField.getText(), passwordField.getText());
             if (success) {
+                // Ensure that the user's home directory exists before showing the desktop.
+                kernel.ensureCurrentUserHomeDirectory();
                 showDesktop();
             } else {
                 status.setText("Invalid credentials");
@@ -65,13 +77,20 @@ public class MainApp extends Application {
         DesktopController desktopController = new DesktopController(kernel);
         Scene desktopScene = new Scene(desktopController.getView(), 1200, 800);
         primaryStage.setScene(desktopScene);
-        kernel.startScheduler();
+
+        // Start driving the kernel scheduler.
+        if (cpuClock != null) {
+            cpuClock.stop();
+        }
+        cpuClock = new Timeline(new KeyFrame(Duration.millis(500), event -> kernel.tick()));
+        cpuClock.setCycleCount(Timeline.INDEFINITE);
+        cpuClock.play();
     }
 
     @Override
     public void stop() {
-        if (kernel != null) {
-            kernel.shutdown();
+        if (cpuClock != null) {
+            cpuClock.stop();
         }
     }
 

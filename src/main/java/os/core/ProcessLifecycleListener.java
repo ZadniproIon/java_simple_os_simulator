@@ -1,4 +1,4 @@
-﻿package os.core;
+package os.core;
 
 /**
  * Listener for process lifecycle changes so the GUI can react.

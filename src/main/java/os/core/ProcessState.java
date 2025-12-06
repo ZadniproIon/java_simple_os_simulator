@@ -1,4 +1,4 @@
-﻿package os.core;
+package os.core;
 
 /**
  * Represents the lifecycle states for a simulated OS process.

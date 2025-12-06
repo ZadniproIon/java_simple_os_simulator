@@ -1,4 +1,4 @@
-﻿package os.apps;
+package os.apps;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -13,8 +13,8 @@ import javafx.scene.control.TableView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.util.Duration;
-import os.core.OSKernel;
-import os.core.OSProcess;
+import os.process.OSKernel;
+import os.process.OSProcess;
 
 /**
  * Displays the simulated process table and allows terminating processes.
@@ -41,7 +41,6 @@ public class TaskManagerApp implements OSApplication {
         }
         tableView = new TableView<>();
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        tableView.setItems(kernel.getProcesses());
 
         TableColumn<OSProcess, Number> pidColumn = new TableColumn<>("PID");
         pidColumn.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getPid()));
@@ -56,7 +55,7 @@ public class TaskManagerApp implements OSApplication {
         memoryColumn.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getAllocatedMemory()));
 
         TableColumn<OSProcess, Number> cpuColumn = new TableColumn<>("CPU Ticks");
-        cpuColumn.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getCpuTimeUsed()));
+        cpuColumn.setCellValueFactory(data -> new SimpleIntegerProperty((int) data.getValue().getCpuTimeUsed()));
 
         tableView.getColumns().addAll(pidColumn, nameColumn, stateColumn, memoryColumn, cpuColumn);
 
@@ -70,16 +69,23 @@ public class TaskManagerApp implements OSApplication {
         root.setBottom(controls);
         root.setTop(new Label("Running processes"));
 
-        refreshTimeline = new Timeline(new KeyFrame(Duration.seconds(1), event -> tableView.refresh()));
+        refreshTimeline = new Timeline(new KeyFrame(Duration.seconds(1), event -> refreshData()));
         refreshTimeline.setCycleCount(Timeline.INDEFINITE);
         refreshTimeline.play();
+
+        refreshData();
         return root;
+    }
+
+    private void refreshData() {
+        tableView.getItems().setAll(kernel.getProcesses());
     }
 
     private void killSelectedProcess() {
         OSProcess selected = tableView.getSelectionModel().getSelectedItem();
         if (selected != null) {
             kernel.killProcess(selected.getPid());
+            refreshData();
         }
     }
 

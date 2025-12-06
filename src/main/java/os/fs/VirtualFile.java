@@ -1,4 +1,4 @@
-﻿package os.fs;
+package os.fs;
 
 import java.nio.file.Path;
 

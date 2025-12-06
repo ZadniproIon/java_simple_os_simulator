@@ -1,8 +1,7 @@
-﻿package os.gui;
+package os.gui;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Supplier;
 
 import javafx.application.Platform;
@@ -18,26 +17,28 @@ import javafx.scene.layout.Pane;
 import os.apps.FileExplorerApp;
 import os.apps.NotepadApp;
 import os.apps.OSApplication;
+import os.apps.SystemMonitorApp;
 import os.apps.TaskManagerApp;
-import os.core.OSKernel;
-import os.core.OSProcess;
-import os.core.ProcessLifecycleListener;
-import os.fs.VirtualFile;
+import os.process.OSKernel;
+import os.process.OSProcess;
+import os.process.ProcessListener;
+import os.vfs.VirtualFile;
 
 /**
  * Builds the desktop scene, including icons, taskbar and app windows.
  */
-public class DesktopController implements ProcessLifecycleListener {
+public class DesktopController implements ProcessListener {
     private final OSKernel kernel;
     private final BorderPane root = new BorderPane();
     private final Pane desktopArea = new Pane();
     private final TaskbarController taskbar = new TaskbarController();
     private final Map<Integer, OSWindow> openWindows = new HashMap<>();
+    private final Map<Integer, OSApplication> applications = new HashMap<>();
     private final FlowPane iconPane = new FlowPane(10, 10);
 
     public DesktopController(OSKernel kernel) {
         this.kernel = kernel;
-        this.kernel.addProcessLifecycleListener(this);
+        this.kernel.addProcessListener(this);
         setupLayout();
         setupIcons();
     }
@@ -56,9 +57,12 @@ public class DesktopController implements ProcessLifecycleListener {
                 launchApplication("Notepad", () -> new NotepadApp(kernel.getFileSystem()), 64)));
         iconPane.getChildren().add(createIcon("File Explorer", () ->
                 launchApplication("File Explorer",
-                        () -> new FileExplorerApp(kernel.getFileSystem(), this::openFileInNotepad), 96)));
+                        () -> new FileExplorerApp(kernel.getFileSystem(),
+                                kernel.getCurrentUserHomeDirectory(), this::openFileInNotepad), 96)));
         iconPane.getChildren().add(createIcon("Task Manager", () ->
                 launchApplication("Task Manager", () -> new TaskManagerApp(kernel), 64)));
+        iconPane.getChildren().add(createIcon("System Monitor", () ->
+                launchApplication("System Monitor", () -> new SystemMonitorApp(kernel), 64)));
     }
 
     private Node createIcon(String title, Runnable action) {
@@ -76,23 +80,29 @@ public class DesktopController implements ProcessLifecycleListener {
 
     private void launchApplication(String processName, Supplier<OSApplication> factory, int memoryRequired) {
         OSApplication app = factory.get();
-        Optional<OSProcess> process = kernel.createProcess(processName, app, memoryRequired);
-        if (process.isEmpty()) {
+        OSProcess process = kernel.createProcess(processName, memoryRequired);
+        if (process == null) {
             Alert alert = new Alert(Alert.AlertType.ERROR, "Not enough memory to start " + processName,
                     ButtonType.OK);
             alert.setHeaderText(null);
             alert.showAndWait();
             return;
         }
-        OSProcess osProcess = process.get();
-        OSWindow window = new OSWindow(app.getName() + " (PID " + osProcess.getPid() + ")",
+
+        app.onStart();
+        applications.put(process.getPid(), app);
+
+        OSWindow window = new OSWindow(app.getName() + " (PID " + process.getPid() + ")",
                 app.createContent());
         window.setLayoutX(100 + openWindows.size() * 20);
         window.setLayoutY(80 + openWindows.size() * 20);
-        window.setOnCloseRequest(() -> kernel.killProcess(osProcess.getPid()));
+        window.setOnCloseRequest(() -> {
+            app.onStop();
+            kernel.killProcess(process.getPid());
+        });
         desktopArea.getChildren().add(window);
-        openWindows.put(osProcess.getPid(), window);
-        taskbar.addProcess(osProcess, () -> focusWindow(osProcess.getPid()));
+        openWindows.put(process.getPid(), window);
+        taskbar.addProcess(process, () -> focusWindow(process.getPid()));
     }
 
     private void focusWindow(int pid) {
@@ -112,7 +122,13 @@ public class DesktopController implements ProcessLifecycleListener {
 
     @Override
     public void processTerminated(OSProcess process) {
-        Platform.runLater(() -> closeWindow(process.getPid()));
+        Platform.runLater(() -> {
+            OSApplication app = applications.remove(process.getPid());
+            if (app != null) {
+                app.onStop();
+            }
+            closeWindow(process.getPid());
+        });
     }
 
     private void closeWindow(int pid) {

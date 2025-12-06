@@ -1,4 +1,4 @@
-﻿package os.apps;
+package os.apps;
 
 import javafx.scene.Parent;
 

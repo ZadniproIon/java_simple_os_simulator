@@ -1,4 +1,4 @@
-﻿package os.core;
+package os.core;
 
 /**
  * Supported CPU scheduling algorithms for this teaching OS.

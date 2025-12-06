@@ -1,6 +1,5 @@
-﻿package os.apps;
+package os.apps;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -18,9 +17,9 @@ import javafx.scene.control.TextInputDialog;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import os.fs.VirtualDirectory;
-import os.fs.VirtualFile;
-import os.fs.VirtualFileSystem;
+import os.vfs.VirtualDirectory;
+import os.vfs.VirtualFile;
+import os.vfs.VirtualFileSystem;
 
 /**
  * Minimal file browser over the VirtualFileSystem.
@@ -33,10 +32,10 @@ public class FileExplorerApp implements OSApplication {
     private ListView<Object> listView;
     private Label pathLabel;
 
-    public FileExplorerApp(VirtualFileSystem fileSystem, Consumer<VirtualFile> textFileOpener) {
+    public FileExplorerApp(VirtualFileSystem fileSystem, VirtualDirectory startDirectory, Consumer<VirtualFile> textFileOpener) {
         this.fileSystem = fileSystem;
         this.textFileOpener = textFileOpener;
-        this.currentDirectory = fileSystem.getRoot();
+        this.currentDirectory = startDirectory != null ? startDirectory : fileSystem.getRootDirectory();
     }
 
     @Override
@@ -101,16 +100,12 @@ public class FileExplorerApp implements OSApplication {
     }
 
     private void refreshListing() {
-        List<Object> entries = new ArrayList<>();
-        entries.addAll(fileSystem.listDirectories(currentDirectory));
-        entries.addAll(fileSystem.listFiles(currentDirectory));
+        List<Object> entries = fileSystem.list(currentDirectory).stream()
+                .map(node -> (Object) node)
+                .toList();
         ObservableList<Object> observable = FXCollections.observableArrayList(entries);
         listView.setItems(observable);
-        String relative = fileSystem.getRoot().getPath().relativize(currentDirectory.getPath()).toString();
-        if (relative.isEmpty()) {
-            relative = "/";
-        }
-        pathLabel.setText(relative);
+        pathLabel.setText(currentDirectory.getPath());
     }
 
     private void openFile(VirtualFile file) {
@@ -125,10 +120,13 @@ public class FileExplorerApp implements OSApplication {
     }
 
     private void navigateUp() {
-        if (currentDirectory.getPath().equals(fileSystem.getRoot().getPath())) {
+        if (currentDirectory == fileSystem.getRootDirectory()) {
             return;
         }
-        currentDirectory = new VirtualDirectory(currentDirectory.getPath().getParent());
+        VirtualDirectory parent = currentDirectory.getParent();
+        if (parent != null) {
+            currentDirectory = parent;
+        }
         refreshListing();
     }
 

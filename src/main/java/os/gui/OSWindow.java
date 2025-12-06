@@ -1,4 +1,4 @@
-﻿package os.gui;
+package os.gui;
 
 import javafx.geometry.Insets;
 import javafx.scene.Cursor;

@@ -1,4 +1,4 @@
-﻿package os.core;
+package os.core;
 
 /**
  * Different user permission levels inside the simulated OS.
