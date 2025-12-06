@@ -27,6 +27,10 @@ public class OSKernel {
     private final AuthManager authManager;
     private final VirtualFileSystem fileSystem;
 
+    // Scheduling history for visualisation (PID per tick, 0 = idle).
+    private final List<Integer> runHistory = new ArrayList<>();
+    private long tickCounter;
+
     private int nextPid = 1;
 
     public OSKernel(MemoryManager memoryManager,
@@ -141,6 +145,15 @@ public class OSKernel {
     }
 
     /**
+     * Returns a snapshot of the scheduling history as a list of PIDs, where
+     * each entry corresponds to one call to {@link #tick()}. A value of 0
+     * represents an idle tick with no running process.
+     */
+    public synchronized List<Integer> getRunHistory() {
+        return new ArrayList<>(runHistory);
+    }
+
+    /**
      * Returns the current user's home directory if logged in, otherwise the root.
      */
     public synchronized VirtualDirectory getCurrentUserHomeDirectory() {
@@ -162,8 +175,10 @@ public class OSKernel {
      * periodically to advance the simulation.
      */
     public synchronized void tick() {
+        tickCounter++;
         OSProcess process = scheduler.getNextProcess();
         if (process == null || process.getState() == ProcessState.TERMINATED) {
+            runHistory.add(0);
             return;
         }
 
@@ -181,6 +196,13 @@ public class OSKernel {
         // the scheduler can choose it again in a later tick.
         if (process.getState() == ProcessState.RUNNING) {
             process.setState(ProcessState.READY);
+        }
+
+        runHistory.add(process.getPid());
+
+        // Keep history bounded so the UI does not grow without limit.
+        if (runHistory.size() > 500) {
+            runHistory.remove(0);
         }
     }
 }
