@@ -6,7 +6,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
-import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
@@ -21,7 +21,7 @@ import os.users.UserAccount;
  * Users select an account from a list (similar to Windows) and then
  * enter the password for that account.
  */
-public class LoginOverlay extends BorderPane {
+public class LoginOverlay extends StackPane {
 
     private final OSKernel kernel;
     private final AuthManager authManager;
@@ -44,6 +44,8 @@ public class LoginOverlay extends BorderPane {
         card.setPadding(new Insets(20));
         card.setPrefWidth(500);
         card.setPrefHeight(500);
+        card.setMaxWidth(500);
+        card.setMaxHeight(500);
         card.setStyle("-fx-background-color: #2d2d2d; -fx-background-radius: 8;"
                 + "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.6), 20, 0, 0, 4);");
 
@@ -66,8 +68,8 @@ public class LoginOverlay extends BorderPane {
         statusLabel.setTextFill(Color.LIGHTGRAY);
 
         card.getChildren().addAll(title, userBox, passwordField, loginButton, statusLabel);
-        setCenter(card);
-        BorderPane.setAlignment(card, Pos.CENTER);
+        getChildren().add(card);
+        setAlignment(card, Pos.CENTER);
     }
 
     /**
