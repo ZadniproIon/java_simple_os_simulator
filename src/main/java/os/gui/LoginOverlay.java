@@ -42,7 +42,8 @@ public class LoginOverlay extends BorderPane {
         VBox card = new VBox(12);
         card.setAlignment(Pos.CENTER);
         card.setPadding(new Insets(20));
-        card.setMaxWidth(380);
+        card.setPrefWidth(500);
+        card.setPrefHeight(500);
         card.setStyle("-fx-background-color: #2d2d2d; -fx-background-radius: 8;"
                 + "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.6), 20, 0, 0, 4);");
 
@@ -54,6 +55,7 @@ public class LoginOverlay extends BorderPane {
         userBox.setPromptText("Select user");
         userBox.setCellFactory(list -> new UserCell());
         userBox.setButtonCell(new UserCell());
+        userBox.setStyle("-fx-background-color: #3c3c3c; -fx-text-fill: white;");
 
         passwordField.setPromptText("Password");
 
@@ -120,6 +122,7 @@ public class LoginOverlay extends BorderPane {
             if (empty || item == null) {
                 setText(null);
                 setGraphic(null);
+                setStyle("");
             } else {
                 Rectangle avatar = new Rectangle(24, 24, Color.DODGERBLUE);
                 avatar.setArcWidth(8);
@@ -132,6 +135,7 @@ public class LoginOverlay extends BorderPane {
                 javafx.scene.layout.HBox row = new javafx.scene.layout.HBox(avatar, box);
                 row.setAlignment(Pos.CENTER_LEFT);
                 row.setSpacing(8);
+                setStyle("-fx-background-color: #3c3c3c;");
                 setGraphic(row);
                 setText(null);
             }
