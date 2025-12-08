@@ -17,6 +17,7 @@ import javafx.scene.layout.Pane;
 import os.apps.FileExplorerApp;
 import os.apps.NotepadApp;
 import os.apps.OSApplication;
+import os.apps.SettingsApp;
 import os.apps.SystemMonitorApp;
 import os.apps.TaskManagerApp;
 import os.process.OSKernel;
@@ -29,6 +30,7 @@ import os.vfs.VirtualFile;
  */
 public class DesktopController implements ProcessListener {
     private final OSKernel kernel;
+    private final Runnable logoutHandler;
     private final BorderPane root = new BorderPane();
     private final Pane desktopArea = new Pane();
     private final TaskbarController taskbar = new TaskbarController();
@@ -36,8 +38,9 @@ public class DesktopController implements ProcessListener {
     private final Map<Integer, OSApplication> applications = new HashMap<>();
     private final FlowPane iconPane = new FlowPane(10, 10);
 
-    public DesktopController(OSKernel kernel) {
+    public DesktopController(OSKernel kernel, Runnable logoutHandler) {
         this.kernel = kernel;
+        this.logoutHandler = logoutHandler;
         this.kernel.addProcessListener(this);
         setupLayout();
         setupIcons();
@@ -63,6 +66,8 @@ public class DesktopController implements ProcessListener {
                 launchApplication("Task Manager", () -> new TaskManagerApp(kernel), 64)));
         iconPane.getChildren().add(createIcon("System Monitor", () ->
                 launchApplication("System Monitor", () -> new SystemMonitorApp(kernel), 64)));
+        iconPane.getChildren().add(createIcon("Settings", () ->
+                launchApplication("Settings", () -> new SettingsApp(kernel, logoutHandler), 64)));
     }
 
     private Node createIcon(String title, Runnable action) {

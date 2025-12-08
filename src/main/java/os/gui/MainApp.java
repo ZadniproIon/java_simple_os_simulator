@@ -3,14 +3,8 @@ package os.gui;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.TextField;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import os.memory.MemoryManager;
@@ -30,6 +24,7 @@ public class MainApp extends Application {
     private Stage primaryStage;
     private OSKernel kernel;
     private Timeline cpuClock;
+    private LoginOverlay loginOverlay;
 
     @Override
     public void start(Stage primaryStage) {
@@ -38,45 +33,24 @@ public class MainApp extends Application {
         // Construct the core OS components.
         MemoryManager memoryManager = new MemoryManager(1024, 64);
         Scheduler scheduler = new Scheduler(SchedulingAlgorithm.ROUND_ROBIN);
-        AuthManager authManager = new AuthManager();
         VirtualFileSystem vfs = new VirtualFileSystem("virtual_fs");
+        AuthManager authManager = new AuthManager(vfs);
         kernel = new OSKernel(memoryManager, scheduler, authManager, vfs);
 
         primaryStage.setTitle("Simple OS Simulator");
-        showLoginScreen();
-        primaryStage.show();
-    }
-
-    private void showLoginScreen() {
-        VBox loginPane = new VBox(10);
-        loginPane.setAlignment(Pos.CENTER);
-        loginPane.setPadding(new Insets(20));
-        Label title = new Label("Welcome to Mini OS");
-        TextField usernameField = new TextField();
-        usernameField.setPromptText("Username");
-        PasswordField passwordField = new PasswordField();
-        passwordField.setPromptText("Password");
-        Label status = new Label("Use admin/admin to login");
-        Button loginButton = new Button("Login");
-        loginButton.setOnAction(e -> {
-            boolean success = kernel.getAuthManager().login(usernameField.getText(), passwordField.getText());
-            if (success) {
-                // Ensure that the user's home directory exists before showing the desktop.
-                kernel.ensureCurrentUserHomeDirectory();
-                showDesktop();
-            } else {
-                status.setText("Invalid credentials");
-            }
+        loginOverlay = new LoginOverlay(kernel, () -> {
+            // nothing extra for now; overlay hides itself
         });
-        loginPane.getChildren().addAll(title, usernameField, passwordField, loginButton, status);
-        Scene loginScene = new Scene(loginPane, 400, 300);
-        primaryStage.setScene(loginScene);
-    }
+        DesktopController desktopController = new DesktopController(kernel, () -> {
+            loginOverlay.refreshUsers();
+            loginOverlay.showOverlay();
+        });
+        loginOverlay.showOverlay();
 
-    private void showDesktop() {
-        DesktopController desktopController = new DesktopController(kernel);
-        Scene desktopScene = new Scene(desktopController.getView(), 1200, 800);
-        primaryStage.setScene(desktopScene);
+        StackPane root = new StackPane(desktopController.getView(), loginOverlay);
+        Scene scene = new Scene(root, 1200, 800);
+        primaryStage.setScene(scene);
+        primaryStage.show();
 
         // Start driving the kernel scheduler.
         if (cpuClock != null) {

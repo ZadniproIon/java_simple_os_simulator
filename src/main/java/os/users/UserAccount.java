@@ -52,6 +52,21 @@ public class UserAccount {
         return passwordHash.equals(hashPassword(rawPassword));
     }
 
+    /**
+     * Factory method used when re-loading accounts from disk where the
+     * password hash is already known.
+     */
+    static UserAccount fromHashed(String username, String passwordHash, UserRole role, String homeDirectory) {
+        return new UserAccount(username, passwordHash, role, homeDirectory, true);
+    }
+
+    private UserAccount(String username, String passwordHash, UserRole role, String homeDirectory, boolean preHashed) {
+        this.username = Objects.requireNonNull(username, "username");
+        this.passwordHash = Objects.requireNonNull(passwordHash, "passwordHash");
+        this.role = Objects.requireNonNull(role, "role");
+        this.homeDirectory = Objects.requireNonNull(homeDirectory, "homeDirectory");
+    }
+
     private String hashPassword(String password) {
         // Very naive hash function, good enough for a teaching example.
         return Integer.toHexString(password.hashCode());
