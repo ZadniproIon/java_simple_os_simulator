@@ -23,6 +23,9 @@ import os.apps.TaskManagerApp;
 import os.process.OSKernel;
 import os.process.OSProcess;
 import os.process.ProcessListener;
+import os.users.UserAccount;
+import os.users.UserRole;
+import os.vfs.VirtualDirectory;
 import os.vfs.VirtualFile;
 
 /**
@@ -58,10 +61,16 @@ public class DesktopController implements ProcessListener {
     private void setupIcons() {
         iconPane.getChildren().add(createIcon("Notepad", () ->
                 launchApplication("Notepad", () -> new NotepadApp(kernel.getFileSystem()), 64)));
-        iconPane.getChildren().add(createIcon("File Explorer", () ->
-                launchApplication("File Explorer",
-                        () -> new FileExplorerApp(kernel.getFileSystem(),
-                                kernel.getCurrentUserHomeDirectory(), this::openFileInNotepad), 96)));
+
+        iconPane.getChildren().add(createIcon("File Explorer", () -> {
+            UserAccount current = kernel.getAuthManager().getCurrentUser();
+            boolean isAdmin = current != null && current.getRole() == UserRole.ADMIN;
+            VirtualDirectory rootDir = isAdmin
+                    ? kernel.getFileSystem().getRootDirectory()
+                    : kernel.getCurrentUserHomeDirectory();
+            launchApplication("File Explorer",
+                    () -> new FileExplorerApp(kernel.getFileSystem(), rootDir, current, this::openFileInNotepad), 96);
+        }));
         iconPane.getChildren().add(createIcon("Task Manager", () ->
                 launchApplication("Task Manager", () -> new TaskManagerApp(kernel), 64)));
         iconPane.getChildren().add(createIcon("System Monitor", () ->

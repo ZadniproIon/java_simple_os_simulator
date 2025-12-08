@@ -17,6 +17,8 @@ import javafx.scene.control.TextInputDialog;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import os.users.UserAccount;
+import os.users.UserRole;
 import os.vfs.VirtualDirectory;
 import os.vfs.VirtualFile;
 import os.vfs.VirtualFileSystem;
@@ -27,15 +29,24 @@ import os.vfs.VirtualFileSystem;
 public class FileExplorerApp implements OSApplication {
     private final VirtualFileSystem fileSystem;
     private final Consumer<VirtualFile> textFileOpener;
+    private final VirtualDirectory rootDirectory;
+    private final UserAccount currentUser;
+    private final boolean isAdmin;
     private VirtualDirectory currentDirectory;
     private BorderPane root;
     private ListView<Object> listView;
     private Label pathLabel;
 
-    public FileExplorerApp(VirtualFileSystem fileSystem, VirtualDirectory startDirectory, Consumer<VirtualFile> textFileOpener) {
+    public FileExplorerApp(VirtualFileSystem fileSystem,
+                           VirtualDirectory rootDirectory,
+                           UserAccount currentUser,
+                           Consumer<VirtualFile> textFileOpener) {
         this.fileSystem = fileSystem;
         this.textFileOpener = textFileOpener;
-        this.currentDirectory = startDirectory != null ? startDirectory : fileSystem.getRootDirectory();
+        this.rootDirectory = rootDirectory != null ? rootDirectory : fileSystem.getRootDirectory();
+        this.currentDirectory = this.rootDirectory;
+        this.currentUser = currentUser;
+        this.isAdmin = currentUser != null && currentUser.getRole() == UserRole.ADMIN;
     }
 
     @Override
@@ -88,10 +99,24 @@ public class FileExplorerApp implements OSApplication {
         leftPane.setPadding(new Insets(10));
 
         HBox toolbar = new HBox(10, upButton, newFileButton, newDirButton, deleteButton);
-        toolbar.setPadding(new Insets(10));
+        toolbar.setPadding(new Insets(4, 10, 10, 10));
+
+        Label roleLabel = new Label();
+        if (isAdmin) {
+            roleLabel.setText("Admin: full access to all user files.");
+        } else if (currentUser != null) {
+            roleLabel.setText("Standard user: access limited to your home directory ("
+                    + currentUser.getUsername() + ").");
+        } else {
+            roleLabel.setText("Guest mode: limited access.");
+        }
+        roleLabel.setStyle("-fx-text-fill: #ffcc66; -fx-font-size: 11px;");
+
+        VBox topBox = new VBox(2, roleLabel, toolbar);
+        topBox.setPadding(new Insets(8, 0, 0, 0));
 
         root = new BorderPane();
-        root.setTop(toolbar);
+        root.setTop(topBox);
         root.setCenter(listView);
         root.setLeft(leftPane);
 
@@ -105,7 +130,28 @@ public class FileExplorerApp implements OSApplication {
                 .toList();
         ObservableList<Object> observable = FXCollections.observableArrayList(entries);
         listView.setItems(observable);
-        pathLabel.setText(currentDirectory.getPath());
+        updatePathLabel();
+    }
+
+    private void updatePathLabel() {
+        String rootPath = rootDirectory.getPath();
+        String currentPath = currentDirectory.getPath();
+        String display;
+        if (currentPath.equals(rootPath)) {
+            display = "/";
+        } else if (currentPath.startsWith(rootPath)) {
+            String rel = currentPath.substring(rootPath.length());
+            if (rel.isEmpty()) {
+                rel = "/";
+            }
+            if (!rel.startsWith("/")) {
+                rel = "/" + rel;
+            }
+            display = rel;
+        } else {
+            display = currentPath;
+        }
+        pathLabel.setText(display);
     }
 
     private void openFile(VirtualFile file) {
@@ -120,7 +166,7 @@ public class FileExplorerApp implements OSApplication {
     }
 
     private void navigateUp() {
-        if (currentDirectory == fileSystem.getRootDirectory()) {
+        if (currentDirectory == rootDirectory) {
             return;
         }
         VirtualDirectory parent = currentDirectory.getParent();
