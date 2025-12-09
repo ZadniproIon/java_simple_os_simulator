@@ -122,6 +122,7 @@ public class DesktopController implements ProcessListener {
     private void focusWindow(int pid) {
         OSWindow window = openWindows.get(pid);
         if (window != null) {
+            window.restore();
             window.toFront();
         }
     }
