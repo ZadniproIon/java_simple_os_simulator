@@ -11,9 +11,11 @@ import javafx.scene.Parent;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import os.apps.FileExplorerApp;
 import os.apps.NotepadApp;
 import os.apps.OSApplication;
@@ -35,16 +37,21 @@ public class DesktopController implements ProcessListener {
     private final OSKernel kernel;
     private final Runnable logoutHandler;
     private final BorderPane root = new BorderPane();
+    // Desktop area where icons and internal windows live.
     private final Pane desktopArea = new Pane();
-    private final TaskbarController taskbar = new TaskbarController();
+    // Layer used to host overlays (e.g., app drawer) on top of the desktop.
+    private final StackPane centerLayer = new StackPane();
+    private final TaskbarController taskbar;
     private final Map<Integer, OSWindow> openWindows = new HashMap<>();
     private final Map<Integer, OSApplication> applications = new HashMap<>();
     private final FlowPane iconPane = new FlowPane(10, 10);
+    private StackPane appDrawerOverlay;
 
     public DesktopController(OSKernel kernel, Runnable logoutHandler) {
         this.kernel = kernel;
         this.logoutHandler = logoutHandler;
         this.kernel.addProcessListener(this);
+        this.taskbar = new TaskbarController(this::openAppDrawer);
         setupLayout();
         setupIcons();
     }
@@ -54,7 +61,8 @@ public class DesktopController implements ProcessListener {
         desktopArea.setPrefSize(1000, 700);
         iconPane.setPadding(new Insets(15));
         desktopArea.getChildren().add(iconPane);
-        root.setCenter(desktopArea);
+        centerLayer.getChildren().add(desktopArea);
+        root.setCenter(centerLayer);
         root.setBottom(taskbar.getView());
     }
 
@@ -129,6 +137,82 @@ public class DesktopController implements ProcessListener {
 
     private void openFileInNotepad(VirtualFile file) {
         launchApplication("Notepad", () -> new NotepadApp(kernel.getFileSystem(), file), 64);
+    }
+
+    /**
+     * Opens a modal-style app drawer overlay centered on the desktop.
+     * Clicking outside the drawer will close it.
+     */
+    private void openAppDrawer() {
+        if (appDrawerOverlay != null && centerLayer.getChildren().contains(appDrawerOverlay)) {
+            appDrawerOverlay.toFront();
+            return;
+        }
+
+        javafx.scene.layout.VBox list = new javafx.scene.layout.VBox(8);
+        list.setPadding(new Insets(15));
+        list.setPrefSize(400, 400);
+        list.setMaxSize(400, 400);
+
+        list.getChildren().add(createDrawerButton("Notepad",
+                () -> launchApplication("Notepad", () -> new NotepadApp(kernel.getFileSystem()), 64)));
+
+        list.getChildren().add(createDrawerButton("File Explorer",
+                () -> {
+                    UserAccount current = kernel.getAuthManager().getCurrentUser();
+                    boolean isAdmin = current != null && current.getRole() == UserRole.ADMIN;
+                    VirtualDirectory rootDir = isAdmin
+                            ? kernel.getFileSystem().getRootDirectory()
+                            : kernel.getCurrentUserHomeDirectory();
+                    launchApplication("File Explorer",
+                            () -> new FileExplorerApp(kernel.getFileSystem(), rootDir, current, this::openFileInNotepad), 96);
+                }));
+
+        list.getChildren().add(createDrawerButton("Task Manager",
+                () -> launchApplication("Task Manager", () -> new TaskManagerApp(kernel), 64)));
+
+        list.getChildren().add(createDrawerButton("System Monitor",
+                () -> launchApplication("System Monitor", () -> new SystemMonitorApp(kernel), 64)));
+
+        list.getChildren().add(createDrawerButton("Settings",
+                () -> launchApplication("Settings", () -> new SettingsApp(kernel, logoutHandler), 64)));
+
+        list.setStyle("-fx-background-color: #2d2d2d; -fx-background-radius: 8;"
+                + "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.7), 20, 0, 0, 4);");
+
+        appDrawerOverlay = new StackPane();
+        appDrawerOverlay.setStyle("-fx-background-color: rgba(0,0,0,0.6);");
+        appDrawerOverlay.getChildren().add(list);
+        StackPane.setAlignment(list, javafx.geometry.Pos.CENTER);
+
+        // Close when clicking outside the drawer content.
+        appDrawerOverlay.addEventFilter(MouseEvent.MOUSE_PRESSED, event -> {
+            if (!list.localToScene(list.getBoundsInLocal()).contains(event.getSceneX(), event.getSceneY())) {
+                closeAppDrawerOverlay();
+            }
+        });
+
+        centerLayer.getChildren().add(appDrawerOverlay);
+        appDrawerOverlay.toFront();
+    }
+
+    private Button createDrawerButton(String label, Runnable action) {
+        Button button = new Button(label);
+        button.setMaxWidth(Double.MAX_VALUE);
+        button.setOnAction(e -> {
+            // Close drawer first so new app window appears cleanly on the desktop.
+            closeAppDrawerOverlay();
+            action.run();
+        });
+        button.setStyle("-fx-background-color: #3c3c3c; -fx-text-fill: white;");
+        return button;
+    }
+
+    private void closeAppDrawerOverlay() {
+        if (appDrawerOverlay != null && centerLayer.getChildren().contains(appDrawerOverlay)) {
+            centerLayer.getChildren().remove(appDrawerOverlay);
+        }
+        appDrawerOverlay = null;
     }
 
     public Parent getView() {

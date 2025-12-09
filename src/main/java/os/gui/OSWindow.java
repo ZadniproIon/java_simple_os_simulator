@@ -27,6 +27,9 @@ public class OSWindow extends BorderPane {
 
     public OSWindow(String title, Node content) {
         setPrefSize(400, 300);
+        // Prevent parent layouts (like StackPane) from stretching the window
+        // to fill all available space unless we explicitly maximise it.
+        setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
         getStyleClass().add("os-window");
         setStyle("-fx-border-color: #1e1e1e; -fx-border-width: 1; -fx-background-color: #f3f3f3;");
 
@@ -160,6 +163,9 @@ public class OSWindow extends BorderPane {
             setPrefWidth(restoreWidth);
             setPrefHeight(restoreHeight);
         }
+        // Restore max size to match preferred size so layouts don't keep
+        // stretching us to the full available area.
+        setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
         maximized = false;
     }
 }
