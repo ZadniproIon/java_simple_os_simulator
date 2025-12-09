@@ -14,8 +14,10 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextInputDialog;
+import javafx.scene.control.OverrunStyle;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import os.users.UserAccount;
 import os.users.UserRole;
@@ -94,10 +96,6 @@ public class FileExplorerApp implements OSApplication {
         Button deleteButton = new Button("Delete");
         deleteButton.setOnAction(e -> deleteSelected());
 
-        pathLabel = new Label();
-        VBox leftPane = new VBox(10, new Label("Current Path:"), pathLabel);
-        leftPane.setPadding(new Insets(10));
-
         HBox toolbar = new HBox(10, upButton, newFileButton, newDirButton, deleteButton);
         toolbar.setPadding(new Insets(4, 10, 10, 10));
 
@@ -115,10 +113,17 @@ public class FileExplorerApp implements OSApplication {
         VBox topBox = new VBox(2, roleLabel, toolbar);
         topBox.setPadding(new Insets(8, 0, 0, 0));
 
+        pathLabel = new Label();
+        pathLabel.setTextOverrun(OverrunStyle.LEADING_ELLIPSIS);
+        pathLabel.setMaxWidth(Double.MAX_VALUE);
+        HBox pathBar = new HBox(6, new Label("Path:"), pathLabel);
+        pathBar.setPadding(new Insets(4, 8, 4, 8));
+        HBox.setHgrow(pathLabel, Priority.ALWAYS);
+
         root = new BorderPane();
         root.setTop(topBox);
         root.setCenter(listView);
-        root.setLeft(leftPane);
+        root.setBottom(pathBar);
 
         refreshListing();
         return root;
