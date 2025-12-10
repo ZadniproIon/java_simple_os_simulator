@@ -68,7 +68,7 @@ public class DesktopController implements ProcessListener {
 
     private void setupIcons() {
         iconPane.getChildren().add(createIcon("Notepad", () ->
-                launchApplication("Notepad", () -> new NotepadApp(kernel.getFileSystem()), 64)));
+                launchApplication("Notepad", () -> new NotepadApp(kernel.getFileSystem()), 48, 32, 96)));
 
         iconPane.getChildren().add(createIcon("File Explorer", () -> {
             UserAccount current = kernel.getAuthManager().getCurrentUser();
@@ -77,14 +77,15 @@ public class DesktopController implements ProcessListener {
                     ? kernel.getFileSystem().getRootDirectory()
                     : kernel.getCurrentUserHomeDirectory();
             launchApplication("File Explorer",
-                    () -> new FileExplorerApp(kernel.getFileSystem(), rootDir, current, this::openFileInNotepad), 96);
+                    () -> new FileExplorerApp(kernel.getFileSystem(), rootDir, current, this::openFileInNotepad),
+                    96, 64, 160);
         }));
         iconPane.getChildren().add(createIcon("Task Manager", () ->
-                launchApplication("Task Manager", () -> new TaskManagerApp(kernel), 64)));
+                launchApplication("Task Manager", () -> new TaskManagerApp(kernel), 128, 96, 192)));
         iconPane.getChildren().add(createIcon("System Monitor", () ->
-                launchApplication("System Monitor", () -> new SystemMonitorApp(kernel), 64)));
+                launchApplication("System Monitor", () -> new SystemMonitorApp(kernel), 256, 180, 320)));
         iconPane.getChildren().add(createIcon("Settings", () ->
-                launchApplication("Settings", () -> new SettingsApp(kernel, logoutHandler), 64)));
+                launchApplication("Settings", () -> new SettingsApp(kernel, logoutHandler), 64, 48, 120)));
     }
 
     private Node createIcon(String title, Runnable action) {
@@ -101,6 +102,15 @@ public class DesktopController implements ProcessListener {
     }
 
     private void launchApplication(String processName, Supplier<OSApplication> factory, int memoryRequired) {
+        launchApplication(processName, factory, memoryRequired,
+                Math.max(64, memoryRequired - 64), memoryRequired + 96);
+    }
+
+    private void launchApplication(String processName,
+                                   Supplier<OSApplication> factory,
+                                   int memoryRequired,
+                                   int minSimulatedUsage,
+                                   int maxSimulatedUsage) {
         OSApplication app = factory.get();
         OSProcess process = kernel.createProcess(processName, memoryRequired);
         if (process == null) {
@@ -109,6 +119,11 @@ public class DesktopController implements ProcessListener {
             alert.setHeaderText(null);
             alert.showAndWait();
             return;
+        }
+        process.configureMemoryProfile(minSimulatedUsage, maxSimulatedUsage, memoryRequired);
+        if (app instanceof NotepadApp notepad) {
+            notepad.setMemoryUsageListener(usage ->
+                    process.setSimulatedMemoryUsage(Math.max(minSimulatedUsage, Math.min(maxSimulatedUsage, usage))));
         }
 
         app.onStart();
@@ -136,7 +151,7 @@ public class DesktopController implements ProcessListener {
     }
 
     private void openFileInNotepad(VirtualFile file) {
-        launchApplication("Notepad", () -> new NotepadApp(kernel.getFileSystem(), file), 64);
+        launchApplication("Notepad", () -> new NotepadApp(kernel.getFileSystem(), file), 48, 32, 96);
     }
 
     /**
@@ -155,7 +170,7 @@ public class DesktopController implements ProcessListener {
         list.setMaxSize(400, 400);
 
         list.getChildren().add(createDrawerButton("Notepad",
-                () -> launchApplication("Notepad", () -> new NotepadApp(kernel.getFileSystem()), 64)));
+                () -> launchApplication("Notepad", () -> new NotepadApp(kernel.getFileSystem()), 48, 32, 96)));
 
         list.getChildren().add(createDrawerButton("File Explorer",
                 () -> {
@@ -165,17 +180,18 @@ public class DesktopController implements ProcessListener {
                             ? kernel.getFileSystem().getRootDirectory()
                             : kernel.getCurrentUserHomeDirectory();
                     launchApplication("File Explorer",
-                            () -> new FileExplorerApp(kernel.getFileSystem(), rootDir, current, this::openFileInNotepad), 96);
+                            () -> new FileExplorerApp(kernel.getFileSystem(), rootDir, current, this::openFileInNotepad),
+                            96, 64, 160);
                 }));
 
         list.getChildren().add(createDrawerButton("Task Manager",
-                () -> launchApplication("Task Manager", () -> new TaskManagerApp(kernel), 64)));
+                () -> launchApplication("Task Manager", () -> new TaskManagerApp(kernel), 128, 96, 192)));
 
         list.getChildren().add(createDrawerButton("System Monitor",
-                () -> launchApplication("System Monitor", () -> new SystemMonitorApp(kernel), 64)));
+                () -> launchApplication("System Monitor", () -> new SystemMonitorApp(kernel), 256, 180, 320)));
 
         list.getChildren().add(createDrawerButton("Settings",
-                () -> launchApplication("Settings", () -> new SettingsApp(kernel, logoutHandler), 64)));
+                () -> launchApplication("Settings", () -> new SettingsApp(kernel, logoutHandler), 64, 48, 120)));
 
         list.setStyle("-fx-background-color: #2d2d2d; -fx-background-radius: 8;"
                 + "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.7), 20, 0, 0, 4);");

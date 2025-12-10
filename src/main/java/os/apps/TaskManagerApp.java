@@ -72,7 +72,7 @@ public class TaskManagerApp implements OSApplication {
         stateColumn.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getState().name()));
 
         TableColumn<OSProcess, Number> memoryColumn = new TableColumn<>("Memory (MB)");
-        memoryColumn.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getAllocatedMemory()));
+        memoryColumn.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getSimulatedMemoryUsage()));
 
         TableColumn<OSProcess, Number> cpuColumn = new TableColumn<>("CPU Ticks");
         cpuColumn.setCellValueFactory(data -> new SimpleIntegerProperty((int) data.getValue().getCpuTimeUsed()));

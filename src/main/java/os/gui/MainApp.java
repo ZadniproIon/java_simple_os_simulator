@@ -31,7 +31,7 @@ public class MainApp extends Application {
         this.primaryStage = primaryStage;
 
         // Construct the core OS components.
-        MemoryManager memoryManager = new MemoryManager(1024, 64);
+        MemoryManager memoryManager = new MemoryManager(4096, 64);
         Scheduler scheduler = new Scheduler(SchedulingAlgorithm.ROUND_ROBIN);
         VirtualFileSystem vfs = new VirtualFileSystem("virtual_fs");
         AuthManager authManager = new AuthManager(vfs);

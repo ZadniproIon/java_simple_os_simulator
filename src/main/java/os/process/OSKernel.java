@@ -191,6 +191,7 @@ public class OSKernel {
         process.incrementCpuTime();
         // Synthetic memory access used to drive page fault / TLB statistics.
         memoryManager.simulateAccess(process);
+        process.fluctuateMemoryUsage();
 
         // For this basic model we simply move the process back to READY so that
         // the scheduler can choose it again in a later tick.

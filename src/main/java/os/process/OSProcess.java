@@ -1,6 +1,7 @@
 package os.process;
 
 import java.util.Objects;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Represents a single simulated process in the fake OS.
@@ -20,6 +21,10 @@ public class OSProcess {
     private int allocatedMemory;
     private long cpuTimeUsed;
     private int estimatedBurstTime = 10;
+
+    private int minSimulatedMemory;
+    private int maxSimulatedMemory;
+    private int simulatedMemoryUsage;
 
     public OSProcess(int pid, String name, int requiredMemory) {
         this.pid = pid;
@@ -83,5 +88,37 @@ public class OSProcess {
 
     public void setEstimatedBurstTime(int estimatedBurstTime) {
         this.estimatedBurstTime = Math.max(1, estimatedBurstTime);
+    }
+
+    public void configureMemoryProfile(int minMb, int maxMb, int initialMb) {
+        this.minSimulatedMemory = Math.max(0, minMb);
+        this.maxSimulatedMemory = Math.max(this.minSimulatedMemory + 1, maxMb);
+        this.simulatedMemoryUsage = clamp(initialMb, this.minSimulatedMemory, this.maxSimulatedMemory);
+    }
+
+    public int getSimulatedMemoryUsage() {
+        if (simulatedMemoryUsage <= 0) {
+            return allocatedMemory > 0 ? allocatedMemory : requiredMemory;
+        }
+        return simulatedMemoryUsage;
+    }
+
+    public void fluctuateMemoryUsage() {
+        if (maxSimulatedMemory <= minSimulatedMemory) {
+            return;
+        }
+        int delta = ThreadLocalRandom.current().nextInt(-15, 16);
+        simulatedMemoryUsage = clamp(simulatedMemoryUsage + delta, minSimulatedMemory, maxSimulatedMemory);
+    }
+
+    public void setSimulatedMemoryUsage(int usageMb) {
+        if (usageMb <= 0) {
+            return;
+        }
+        simulatedMemoryUsage = clamp(usageMb, minSimulatedMemory, maxSimulatedMemory);
+    }
+
+    private int clamp(int value, int min, int max) {
+        return Math.max(min, Math.min(max, value));
     }
 }

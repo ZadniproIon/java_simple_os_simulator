@@ -1,6 +1,7 @@
 package os.apps;
 
 import java.util.Optional;
+import java.util.function.IntConsumer;
 
 import javafx.geometry.Insets;
 import javafx.scene.Parent;
@@ -26,6 +27,7 @@ public class NotepadApp implements OSApplication {
     private TextArea textArea;
     private Text statusText;
     private VirtualFile currentFile;
+    private IntConsumer memoryUsageListener = usage -> {};
 
     public NotepadApp(VirtualFileSystem fileSystem) {
         this(fileSystem, null);
@@ -47,6 +49,7 @@ public class NotepadApp implements OSApplication {
             return root;
         }
         textArea = new TextArea();
+        textArea.textProperty().addListener((obs, oldText, newText) -> reportMemoryUsage(newText));
         statusText = new Text("Ready");
 
         MenuItem openItem = new MenuItem("Open...");
@@ -72,8 +75,15 @@ public class NotepadApp implements OSApplication {
 
         if (initialFile != null) {
             loadFile(initialFile);
+        } else {
+            reportMemoryUsage(textArea.getText());
         }
         return root;
+    }
+
+    public void setMemoryUsageListener(IntConsumer listener) {
+        this.memoryUsageListener = listener != null ? listener : usage -> {};
+        reportMemoryUsage(textArea != null ? textArea.getText() : "");
     }
 
     private void openFileDialog() {
@@ -102,6 +112,7 @@ public class NotepadApp implements OSApplication {
             currentFile = file;
             textArea.setText(content);
             statusText.setText("Opened " + file.getName());
+            reportMemoryUsage(content);
         } catch (Exception e) {
             showError("Unable to read file");
         }
@@ -114,6 +125,7 @@ public class NotepadApp implements OSApplication {
         }
         fileSystem.writeFile(currentFile, textArea.getText());
         statusText.setText("Saved " + currentFile.getName());
+        reportMemoryUsage(textArea.getText());
     }
 
     private void saveAs() {
@@ -139,10 +151,21 @@ public class NotepadApp implements OSApplication {
                 fileSystem.writeFile(file, textArea.getText());
                 currentFile = file;
                 statusText.setText("Saved " + file.getName());
+                reportMemoryUsage(textArea.getText());
             }
         } catch (Exception e) {
             showError("Unable to save file");
         }
+    }
+
+    private void reportMemoryUsage(String text) {
+        if (text == null) {
+            memoryUsageListener.accept(48);
+            return;
+        }
+        int length = text.length();
+        int usage = 32 + Math.min(160, length / 1024);
+        memoryUsageListener.accept(usage);
     }
 
     private void showError(String message) {
