@@ -30,6 +30,7 @@ public class OSKernel {
     // Scheduling history for visualisation (PID per tick, 0 = idle).
     private final List<Integer> runHistory = new ArrayList<>();
     private long tickCounter;
+    private OSProcess currentRunning;
 
     private int nextPid = 1;
 
@@ -104,6 +105,9 @@ public class OSKernel {
         if (process == null) {
             return;
         }
+        if (process == currentRunning) {
+            currentRunning = null;
+        }
         process.setState(ProcessState.TERMINATED);
         memoryManager.freeMemory(process);
         scheduler.removeProcess(process);
@@ -154,6 +158,36 @@ public class OSKernel {
     }
 
     /**
+     * Returns the CPU utilisation over the most recent {@code sampleTicks}
+     * scheduler ticks, expressed as a percentage of busy ticks.
+     */
+    public synchronized double getCpuUsagePercentage(int sampleTicks) {
+        double memoryRatio = (double) memoryManager.getUsedMemory()
+                / Math.max(1, memoryManager.getTotalMemory());
+
+        double busyRatio = 0;
+        if (sampleTicks > 0 && !runHistory.isEmpty()) {
+            int considered = Math.min(sampleTicks, runHistory.size());
+            int start = runHistory.size() - considered;
+            int busy = 0;
+            for (int i = start; i < runHistory.size(); i++) {
+                if (runHistory.get(i) > 0) {
+                    busy++;
+                }
+            }
+            busyRatio = considered == 0 ? 0 : (double) busy / considered;
+        }
+
+        double synthetic = Math.max(0, Math.min(1, memoryRatio * 0.75));
+        double jitter = (Math.random() - 0.5) * 0.15; // +-7.5%
+        synthetic = Math.max(0, Math.min(1, synthetic + jitter));
+
+        double blended = synthetic * 0.7 + busyRatio * 0.3;
+        blended = Math.max(0.05, Math.min(0.95, blended));
+        return blended * 100.0;
+    }
+
+    /**
      * Returns the current user's home directory if logged in, otherwise the root.
      */
     public synchronized VirtualDirectory getCurrentUserHomeDirectory() {
@@ -176,6 +210,11 @@ public class OSKernel {
      */
     public synchronized void tick() {
         tickCounter++;
+        if (currentRunning != null && currentRunning.getState() == ProcessState.RUNNING) {
+            currentRunning.setState(ProcessState.READY);
+            currentRunning = null;
+        }
+
         OSProcess process = scheduler.getNextProcess();
         if (process == null || process.getState() == ProcessState.TERMINATED) {
             runHistory.add(0);
@@ -188,16 +227,11 @@ public class OSKernel {
 
         // Simulate running for one time slice.
         process.setState(ProcessState.RUNNING);
+        currentRunning = process;
         process.incrementCpuTime();
         // Synthetic memory access used to drive page fault / TLB statistics.
         memoryManager.simulateAccess(process);
         process.fluctuateMemoryUsage();
-
-        // For this basic model we simply move the process back to READY so that
-        // the scheduler can choose it again in a later tick.
-        if (process.getState() == ProcessState.RUNNING) {
-            process.setState(ProcessState.READY);
-        }
 
         runHistory.add(process.getPid());
 

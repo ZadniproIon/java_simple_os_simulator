@@ -25,8 +25,18 @@ public class OSWindow extends BorderPane {
     private double restoreWidth;
     private double restoreHeight;
 
+    private boolean resizing;
+    private double resizeStartX;
+    private double resizeStartY;
+    private double resizeStartWidth;
+    private double resizeStartHeight;
+    private static final double RESIZE_MARGIN = 8;
+
+    private HBox titleBar;
+    private javafx.scene.layout.StackPane contentWrapper;
+
     public OSWindow(String title, Node content) {
-        setPrefSize(420, 320);
+        setPrefSize(640, 420);
         // Prevent parent layouts (like StackPane) from stretching the window
         // to fill all available space unless we explicitly maximise it.
         setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
@@ -47,15 +57,16 @@ public class OSWindow extends BorderPane {
         HBox controls = new HBox(8, minimizeButton, maximizeButton, closeButton);
         controls.getStyleClass().add("os-window-controls");
 
-        HBox titleBar = new HBox(10, titleLabel, createSpacer(), controls);
+        titleBar = new HBox(10, titleLabel, createSpacer(), controls);
         titleBar.setPadding(new Insets(5, 16, 5, 16));
         titleBar.getStyleClass().add("os-window-titlebar");
         enableDragging(titleBar);
         setTop(titleBar);
 
-        javafx.scene.layout.StackPane contentWrapper = new javafx.scene.layout.StackPane(content);
+        contentWrapper = new javafx.scene.layout.StackPane(content);
         contentWrapper.getStyleClass().add("app-surface");
         setCenter(contentWrapper);
+        setupResizeGestures();
 
         setOnMouseClicked(e -> toFront());
     }
@@ -71,6 +82,54 @@ public class OSWindow extends BorderPane {
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
         return spacer;
+    }
+
+    private void setupResizeGestures() {
+        setOnMouseMoved(event -> {
+            if (maximized) {
+                setCursor(Cursor.DEFAULT);
+                return;
+            }
+            boolean onRight = event.getX() >= getWidth() - RESIZE_MARGIN;
+            boolean onBottom = event.getY() >= getHeight() - RESIZE_MARGIN;
+            if (onRight && onBottom) {
+                setCursor(Cursor.SE_RESIZE);
+            } else {
+                setCursor(Cursor.DEFAULT);
+            }
+        });
+
+        addEventHandler(MouseEvent.MOUSE_PRESSED, event -> {
+            if (getCursor() == Cursor.SE_RESIZE && !maximized) {
+                resizing = true;
+                resizeStartX = event.getScreenX();
+                resizeStartY = event.getScreenY();
+                resizeStartWidth = getWidth() > 0 ? getWidth() : getPrefWidth();
+                resizeStartHeight = getHeight() > 0 ? getHeight() : getPrefHeight();
+                event.consume();
+            }
+        });
+
+        addEventHandler(MouseEvent.MOUSE_DRAGGED, event -> {
+            if (!resizing) {
+                return;
+            }
+            double deltaX = event.getScreenX() - resizeStartX;
+            double deltaY = event.getScreenY() - resizeStartY;
+            double newWidth = Math.max(360, resizeStartWidth + deltaX);
+            double newHeight = Math.max(260, resizeStartHeight + deltaY);
+            setPrefWidth(newWidth);
+            setPrefHeight(newHeight);
+            setMaxSize(newWidth, newHeight);
+            event.consume();
+        });
+
+        addEventHandler(MouseEvent.MOUSE_RELEASED, event -> {
+            if (resizing) {
+                resizing = false;
+                setCursor(Cursor.DEFAULT);
+            }
+        });
     }
 
     private void enableDragging(Node dragHandle) {
@@ -155,6 +214,7 @@ public class OSWindow extends BorderPane {
         setMaxWidth(region.getWidth());
         setMaxHeight(region.getHeight());
         maximized = true;
+        updateWindowShape();
     }
 
     private void restoreFromMaximize() {
@@ -171,5 +231,16 @@ public class OSWindow extends BorderPane {
         // stretching us to the full available area.
         setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
         maximized = false;
+        updateWindowShape();
+    }
+
+    private void updateWindowShape() {
+        if (maximized) {
+            if (!getStyleClass().contains("window-maximized")) {
+                getStyleClass().add("window-maximized");
+            }
+        } else {
+            getStyleClass().remove("window-maximized");
+        }
     }
 }

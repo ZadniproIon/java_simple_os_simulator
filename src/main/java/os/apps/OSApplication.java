@@ -13,4 +13,12 @@ public interface OSApplication {
     default void onStart() {}
 
     default void onStop() {}
+
+    /**
+     * Called before the hosting window is closed. Applications may veto the close
+     * request (for example when unsaved state exists) by returning {@code false}.
+     */
+    default boolean requestClose() {
+        return true;
+    }
 }

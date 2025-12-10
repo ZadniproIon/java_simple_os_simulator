@@ -21,6 +21,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
@@ -42,8 +43,10 @@ public class TaskManagerApp implements OSApplication {
 
     private ComboBox<SchedulingAlgorithm> algorithmBox;
     private Spinner<Integer> quantumSpinner;
-    private HBox ganttBox;
+    private Pane ganttPane;
+    private Label ramSummaryLabel;
     private final Map<Integer, Color> pidColors = new HashMap<>();
+    private static final int MAX_GANTT_TICKS = 20;
 
     public TaskManagerApp(OSKernel kernel) {
         this.kernel = kernel;
@@ -107,13 +110,21 @@ public class TaskManagerApp implements OSApplication {
         schedulerControls.setPadding(new Insets(8));
         schedulerControls.getStyleClass().add("toolbar");
 
-        ganttBox = new HBox(2);
-        ganttBox.setPadding(new Insets(4, 8, 8, 8));
+        ganttPane = new Pane();
+        ganttPane.setPrefHeight(28);
+        ganttPane.setMinHeight(28);
+        ganttPane.setMaxHeight(28);
+        ganttPane.setPadding(new Insets(4, 8, 8, 8));
+        ganttPane.widthProperty().addListener((obs, oldVal, newVal) -> refreshGantt());
+
+        ramSummaryLabel = new Label();
+        ramSummaryLabel.getStyleClass().add("caption");
 
         VBox bottom = new VBox(4,
-                new Label("Scheduler & Gantt view (most recent ticks on the right)"),
+                new Label("Scheduler & history"),
+                ramSummaryLabel,
                 schedulerControls,
-                ganttBox);
+                ganttPane);
 
         Label heading = new Label("System processes");
         heading.getStyleClass().add("section-title");
@@ -138,23 +149,52 @@ public class TaskManagerApp implements OSApplication {
 
     private void refreshData() {
         tableView.getItems().setAll(kernel.getProcesses());
+        int used = kernel.getMemoryManager().getUsedMemory();
+        int total = kernel.getMemoryManager().getTotalMemory();
+        int free = total - used;
+        ramSummaryLabel.setText(String.format("RAM usage: %d / %d MB   (free %d MB)", used, total, free));
     }
 
     private void refreshGantt() {
-        List<Integer> history = kernel.getRunHistory();
-        int maxTicks = 60;
-        int start = Math.max(0, history.size() - maxTicks);
-        ganttBox.getChildren().clear();
-        for (int i = start; i < history.size(); i++) {
-            int pid = history.get(i);
-            Rectangle rect = new Rectangle(8, 20);
-            if (pid == 0) {
-                rect.setFill(Color.web("#2d2d2d"));
-            } else {
-                rect.setFill(colorForPid(pid));
-            }
-            ganttBox.getChildren().add(rect);
+        if (ganttPane == null) {
+            return;
         }
+        List<Integer> history = kernel.getRunHistory();
+        int sliceLength = Math.min(MAX_GANTT_TICKS, history.size());
+        int start = Math.max(0, history.size() - sliceLength);
+        ganttPane.getChildren().clear();
+
+        double available = Math.max(200, ganttPane.getWidth());
+        if (available <= 200 && tableView != null) {
+            available = Math.max(200, tableView.getWidth());
+        }
+        double spacing = 4;
+        double cellWidth = Math.max(6, (available - spacing * (MAX_GANTT_TICKS - 1)) / MAX_GANTT_TICKS);
+
+        int paddingSlots = MAX_GANTT_TICKS - sliceLength;
+        double x = 0;
+        for (int i = 0; i < MAX_GANTT_TICKS; i++) {
+            Rectangle rect = new Rectangle(cellWidth, 20);
+            rect.setManaged(false);
+            int idx = i - paddingSlots;
+            if (idx < 0) {
+                rect.setFill(fadedColor(Color.web("#e0e0e0"), i));
+            } else {
+                int pid = history.get(start + idx);
+                Color base = pid == 0 ? Color.web("#c7c7c7") : colorForPid(pid);
+                rect.setFill(fadedColor(base, i));
+            }
+            rect.setLayoutX(x);
+            rect.setLayoutY(4);
+            ganttPane.getChildren().add(rect);
+            x += cellWidth + spacing;
+        }
+    }
+
+    private Color fadedColor(Color base, int positionIndex) {
+        double ageFactor = (double) positionIndex / Math.max(1, MAX_GANTT_TICKS - 1);
+        double blend = 0.15 + 0.55 * ageFactor;
+        return base.interpolate(Color.WHITE, blend);
     }
 
     private String formatDuration(Duration duration) {

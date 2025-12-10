@@ -8,7 +8,6 @@ import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -35,9 +34,7 @@ public class SystemMonitorApp implements OSApplication {
     private Label totalLabel;
     private Label usedLabel;
     private Label freeLabel;
-    private Label accessLabel;
-    private Label faultsLabel;
-    private Label tlbLabel;
+    private Label cpuLabel;
     private FlowPane pageGrid;
     private Timeline refreshTimeline;
 
@@ -66,14 +63,12 @@ public class SystemMonitorApp implements OSApplication {
         HBox memorySummary = new HBox(15, totalLabel, usedLabel, freeLabel);
         memorySummary.setAlignment(Pos.CENTER_LEFT);
 
-        accessLabel = new Label();
-        faultsLabel = new Label();
-        tlbLabel = new Label();
+        cpuLabel = new Label();
 
-        VBox statsBox = new VBox(5, accessLabel, faultsLabel, tlbLabel);
+        VBox statsBox = new VBox(5, cpuLabel);
         statsBox.setAlignment(Pos.CENTER_LEFT);
 
-        VBox topBox = new VBox(8, new Label("Memory & TLB statistics"), memorySummary, statsBox);
+        VBox topBox = new VBox(8, new Label("System statistics"), memorySummary, statsBox);
         topBox.setPadding(new Insets(10));
 
         pageGrid = new FlowPane();
@@ -102,15 +97,8 @@ public class SystemMonitorApp implements OSApplication {
         usedLabel.setText("Used: " + used + " MB");
         freeLabel.setText("Free: " + free + " MB");
 
-        long accesses = memoryManager.getTotalAccesses();
-        long faults = memoryManager.getPageFaults();
-        long tlbHits = memoryManager.getTlbHits();
-        long tlbMisses = memoryManager.getTlbMisses();
-
-        accessLabel.setText("Total memory accesses: " + accesses);
-        faultsLabel.setText("Page faults (synthetic): " + faults +
-                (accesses > 0 ? String.format(" (%.1f%%)", faults * 100.0 / accesses) : ""));
-        tlbLabel.setText("TLB hits: " + tlbHits + "  |  misses: " + tlbMisses);
+        double cpuUsage = kernel.getCpuUsagePercentage(120);
+        cpuLabel.setText(String.format("CPU activity: %.0f%%", cpuUsage));
 
         pageGrid.getChildren().clear();
         for (MemoryPage page : memoryManager.getPages()) {
@@ -123,16 +111,7 @@ public class SystemMonitorApp implements OSApplication {
             }
             rect.setStroke(Color.BLACK);
 
-            VBox cell = new VBox(2);
-            cell.setAlignment(Pos.CENTER);
-            cell.getChildren().add(rect);
-
-            Label label = new Label(owner == null ? String.valueOf(page.getPageNumber())
-                    : owner.getPid() + ":" + page.getPageNumber());
-            label.setStyle("-fx-font-size: 9px;");
-            cell.getChildren().add(label);
-
-            pageGrid.getChildren().add(cell);
+            pageGrid.getChildren().add(rect);
         }
     }
 
@@ -153,4 +132,3 @@ public class SystemMonitorApp implements OSApplication {
         }
     }
 }
-

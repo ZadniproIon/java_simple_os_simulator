@@ -55,6 +55,7 @@ public class SettingsApp implements OSApplication {
         UserAccount current = auth.getCurrentUser();
 
         userListView = new ListView<>();
+        userListView.setPrefHeight(260);
         userListView.getItems().setAll(auth.getUsers());
         userListView.setCellFactory(list -> new ListCell<>() {
             @Override
@@ -112,14 +113,21 @@ public class SettingsApp implements OSApplication {
                 roleWarning,
                 new Label("User accounts"),
                 userListView,
-                userButtons,
-                new Separator(),
-                appearanceBox);
+                userButtons);
         usersBox.setPadding(new Insets(10));
+        usersBox.getStyleClass().add("card");
+        usersBox.setPrefWidth(330);
+        VBox.setVgrow(userListView, javafx.scene.layout.Priority.ALWAYS);
+
+        HBox contentRow = new HBox(24, usersBox, appearanceBox);
+        contentRow.setPadding(new Insets(10));
+        contentRow.setAlignment(Pos.TOP_LEFT);
+        HBox.setHgrow(usersBox, javafx.scene.layout.Priority.ALWAYS);
+        HBox.setHgrow(appearanceBox, javafx.scene.layout.Priority.NEVER);
 
         root = new BorderPane();
         root.setPadding(new Insets(12));
-        root.setCenter(usersBox);
+        root.setCenter(contentRow);
         Label title = new Label("System Settings");
         title.getStyleClass().add("section-title");
         root.setTop(title);
@@ -217,7 +225,9 @@ public class SettingsApp implements OSApplication {
         applyButton.setOnAction(e -> applyWallpaperSelection(current));
 
         VBox appearance = new VBox(8, title, subtitle, wallpaperBox, wallpaperPreview, applyButton);
-        appearance.setPadding(new Insets(8, 0, 0, 0));
+        appearance.setPadding(new Insets(12));
+        appearance.setPrefWidth(260);
+        appearance.getStyleClass().add("card");
         return appearance;
     }
 

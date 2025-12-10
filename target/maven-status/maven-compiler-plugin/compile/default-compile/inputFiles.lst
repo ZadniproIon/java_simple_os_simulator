@@ -6,6 +6,7 @@ C:\Users\nutzu\Documents\VSCode\java_simple_os_simulator\src\main\java\os\proces
 C:\Users\nutzu\Documents\VSCode\java_simple_os_simulator\src\main\java\os\core\OSProcess.java
 C:\Users\nutzu\Documents\VSCode\java_simple_os_simulator\src\main\java\os\core\ProcessLifecycleListener.java
 C:\Users\nutzu\Documents\VSCode\java_simple_os_simulator\src\main\java\os\vfs\VirtualFile.java
+C:\Users\nutzu\Documents\VSCode\java_simple_os_simulator\src\main\java\os\apps\dialogs\VirtualFileChooser.java
 C:\Users\nutzu\Documents\VSCode\java_simple_os_simulator\src\main\java\os\memory\MemoryManager.java
 C:\Users\nutzu\Documents\VSCode\java_simple_os_simulator\src\main\java\os\core\ProcessState.java
 C:\Users\nutzu\Documents\VSCode\java_simple_os_simulator\src\main\java\os\fs\VirtualDirectory.java

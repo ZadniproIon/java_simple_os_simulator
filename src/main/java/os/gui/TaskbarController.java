@@ -79,4 +79,9 @@ public class TaskbarController {
             appButtonsBox.getChildren().remove(button);
         }
     }
+
+    public void clearAll() {
+        buttons.clear();
+        appButtonsBox.getChildren().clear();
+    }
 }

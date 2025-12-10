@@ -14,11 +14,12 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextInputDialog;
-import javafx.scene.control.OverrunStyle;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.geometry.Pos;
 import os.users.UserAccount;
 import os.users.UserRole;
 import os.vfs.VirtualDirectory;
@@ -37,7 +38,7 @@ public class FileExplorerApp implements OSApplication {
     private VirtualDirectory currentDirectory;
     private BorderPane root;
     private ListView<Object> listView;
-    private Label pathLabel;
+    private TextField pathField;
 
     public FileExplorerApp(VirtualFileSystem fileSystem,
                            VirtualDirectory rootDirectory,
@@ -101,9 +102,6 @@ public class FileExplorerApp implements OSApplication {
         deleteButton.getStyleClass().add("outlined-button");
         deleteButton.setOnAction(e -> deleteSelected());
 
-        VBox actionBox = new VBox(10, upButton, newFileButton, newDirButton, deleteButton);
-        actionBox.setFillWidth(true);
-
         Label roleLabel = new Label();
         if (isAdmin) {
             roleLabel.setText("Admin: full access to all user files.");
@@ -115,26 +113,29 @@ public class FileExplorerApp implements OSApplication {
         }
         roleLabel.getStyleClass().add("warning-text");
 
-        VBox sidebar = new VBox(16, roleLabel, actionBox);
-        sidebar.getStyleClass().add("sidebar");
-        sidebar.setPrefWidth(220);
+        pathField = new TextField();
+        pathField.setEditable(false);
+        pathField.setPrefColumnCount(40);
+        pathField.getStyleClass().add("path-field");
+        HBox.setHgrow(pathField, Priority.ALWAYS);
 
-        pathLabel = new Label();
-        pathLabel.setTextOverrun(OverrunStyle.LEADING_ELLIPSIS);
-        pathLabel.setMaxWidth(Double.MAX_VALUE);
-        Label pathText = new Label("Current path");
-        pathText.getStyleClass().add("caption");
-        HBox pathBar = new HBox(6, pathText, pathLabel);
-        pathBar.getStyleClass().add("path-bar");
-        HBox.setHgrow(pathLabel, Priority.ALWAYS);
+        HBox buttonBar = new HBox(8, upButton, newFileButton, newDirButton, deleteButton);
+        buttonBar.setAlignment(Pos.CENTER_RIGHT);
 
-        VBox contentBox = new VBox(12, pathBar, listView);
+        VBox topBox = new VBox(6,
+                roleLabel,
+                new Label("Current path"),
+                pathField,
+                buttonBar);
+        topBox.setPadding(new Insets(0, 0, 12, 0));
+
+        VBox contentBox = new VBox(12, listView);
         contentBox.getStyleClass().add("card");
         contentBox.setPadding(new Insets(12));
 
         root = new BorderPane();
         root.setPadding(new Insets(12));
-        root.setLeft(sidebar);
+        root.setTop(topBox);
         root.setCenter(contentBox);
 
         refreshListing();
@@ -168,7 +169,7 @@ public class FileExplorerApp implements OSApplication {
         } else {
             display = currentPath;
         }
-        pathLabel.setText(display);
+        pathField.setText(display);
     }
 
     private void openFile(VirtualFile file) {

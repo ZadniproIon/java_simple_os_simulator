@@ -45,6 +45,7 @@ public class MainApp extends Application {
             loginOverlay.refreshUsers();
             loginOverlay.showOverlay();
             if (desktopRef[0] != null) {
+                desktopRef[0].closeAllApplications();
                 desktopRef[0].refreshWallpaper();
             }
         }, wallpaperService);

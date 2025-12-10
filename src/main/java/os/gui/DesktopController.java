@@ -11,6 +11,8 @@ import javafx.scene.Parent;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.Separator;
+import javafx.scene.layout.VBox;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
@@ -141,6 +143,9 @@ public class DesktopController implements ProcessListener {
         window.setLayoutX(100 + openWindows.size() * 20);
         window.setLayoutY(80 + openWindows.size() * 20);
         window.setOnCloseRequest(() -> {
+            if (!app.requestClose()) {
+                return;
+            }
             app.onStop();
             kernel.killProcess(process.getPid());
         });
@@ -171,7 +176,7 @@ public class DesktopController implements ProcessListener {
             return;
         }
 
-        javafx.scene.layout.VBox list = new javafx.scene.layout.VBox(8);
+        VBox list = new VBox(8);
         list.setPadding(new Insets(15));
         list.setPrefSize(400, 400);
         list.setMaxSize(400, 400);
@@ -202,6 +207,12 @@ public class DesktopController implements ProcessListener {
                 () -> launchApplication("Settings",
                         () -> new SettingsApp(kernel, logoutHandler, wallpaperService, this::refreshWallpaper),
                         64, 48, 120)));
+
+        list.getChildren().add(new Separator());
+        if (logoutHandler != null) {
+            list.getChildren().add(createDrawerButton("Log out", logoutHandler));
+        }
+        list.getChildren().add(createDrawerButton("Exit app", Platform::exit));
 
         appDrawerOverlay = new StackPane();
         appDrawerOverlay.getStyleClass().add("app-drawer");
@@ -268,5 +279,19 @@ public class DesktopController implements ProcessListener {
             desktopArea.getChildren().remove(window);
             taskbar.removeProcess(pid);
         }
+    }
+
+    /**
+     * Closes all running apps and clears the desktop, used when logging out.
+     */
+    public void closeAllApplications() {
+        Integer[] running = openWindows.keySet().toArray(new Integer[0]);
+        for (Integer pid : running) {
+            kernel.killProcess(pid);
+        }
+        openWindows.clear();
+        applications.clear();
+        desktopArea.getChildren().removeIf(node -> node instanceof OSWindow);
+        taskbar.clearAll();
     }
 }

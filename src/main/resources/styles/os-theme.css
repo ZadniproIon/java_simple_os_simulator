@@ -86,11 +86,20 @@
     -fx-background-radius: 18;
 }
 
+.os-window.window-maximized {
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+}
+
 .os-window-titlebar {
     -fx-background-color: -md3-primary;
     -fx-background-radius: 18 18 0 0;
     -fx-padding: 10 16 10 20;
     -fx-alignment: center-left;
+}
+
+.os-window.window-maximized .os-window-titlebar {
+    -fx-background-radius: 0;
 }
 
 .os-window-title {
@@ -125,10 +134,22 @@
     -fx-background-color: rgba(255, 0, 0, 0.6);
 }
 
+.window-resize-handle {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent transparent rgba(0,0,0,0.2) rgba(0,0,0,0.2);
+    -fx-border-width: 0 0 2 2;
+    -fx-cursor: se-resize;
+    -fx-padding: 4;
+}
+
 .app-surface {
     -fx-background-color: -md3-surface;
     -fx-background-radius: 0 0 18 18;
     -fx-padding: 12;
+}
+
+.os-window.window-maximized .app-surface {
+    -fx-background-radius: 0;
 }
 
 .top-app-bar {
@@ -275,6 +296,15 @@
     -fx-background-color: -md3-surface-variant;
     -fx-padding: 8 12 8 12;
     -fx-background-radius: 12;
+}
+
+.path-field {
+    -fx-background-color: -md3-surface;
+    -fx-border-color: -md3-outline;
+    -fx-border-radius: 12;
+    -fx-background-radius: 12;
+    -fx-padding: 6 10 6 10;
+    -fx-text-fill: -md3-on-surface;
 }
 
 .login-overlay {
