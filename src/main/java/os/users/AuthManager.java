@@ -51,6 +51,16 @@ public class AuthManager {
     }
 
     /**
+     * Persists the user list after in-place modifications such as wallpaper changes.
+     */
+    public void updateUser(UserAccount user) {
+        if (user == null) {
+            return;
+        }
+        saveUsers();
+    }
+
+    /**
      * Removes a user by username. The default admin account is preserved.
      */
     public void removeUser(String username) {
@@ -120,7 +130,8 @@ public class AuthManager {
                 String hash = parts[1];
                 UserRole role = UserRole.valueOf(parts[2]);
                 String home = parts[3];
-                users.add(UserAccount.fromHashed(username, hash, role, home));
+                String wallpaper = parts.length >= 5 ? parts[4] : UserAccount.DEFAULT_WALLPAPER;
+                users.add(UserAccount.fromHashed(username, hash, role, home, wallpaper));
             }
         } catch (Exception ignored) {
             // If loading fails we simply fall back to a fresh user list.
@@ -133,7 +144,8 @@ public class AuthManager {
             sb.append(user.getUsername()).append(";")
               .append(user.getPasswordHash()).append(";")
               .append(user.getRole().name()).append(";")
-              .append(user.getHomeDirectory()).append("\n");
+              .append(user.getHomeDirectory()).append(";")
+              .append(user.getPreferredWallpaper()).append("\n");
         }
         fileSystem.writeFile(userStoreFile, sb.toString());
     }

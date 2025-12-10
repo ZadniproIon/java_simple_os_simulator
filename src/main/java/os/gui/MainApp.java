@@ -7,6 +7,7 @@ import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import os.gui.wallpaper.WallpaperService;
 import os.memory.MemoryManager;
 import os.process.OSKernel;
 import os.process.Scheduler;
@@ -36,14 +37,23 @@ public class MainApp extends Application {
         VirtualFileSystem vfs = new VirtualFileSystem("virtual_fs");
         AuthManager authManager = new AuthManager(vfs);
         kernel = new OSKernel(memoryManager, scheduler, authManager, vfs);
+        WallpaperService wallpaperService = new WallpaperService(vfs);
 
         primaryStage.setTitle("Simple OS Simulator");
-        loginOverlay = new LoginOverlay(kernel, () -> {
-            // nothing extra for now; overlay hides itself
-        });
+        DesktopController[] desktopRef = new DesktopController[1];
         DesktopController desktopController = new DesktopController(kernel, () -> {
             loginOverlay.refreshUsers();
             loginOverlay.showOverlay();
+            if (desktopRef[0] != null) {
+                desktopRef[0].refreshWallpaper();
+            }
+        }, wallpaperService);
+        desktopRef[0] = desktopController;
+
+        loginOverlay = new LoginOverlay(kernel, () -> {
+            if (desktopRef[0] != null) {
+                desktopRef[0].refreshWallpaper();
+            }
         });
         loginOverlay.showOverlay();
 

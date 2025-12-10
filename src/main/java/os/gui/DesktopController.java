@@ -22,6 +22,7 @@ import os.apps.OSApplication;
 import os.apps.SettingsApp;
 import os.apps.SystemMonitorApp;
 import os.apps.TaskManagerApp;
+import os.gui.wallpaper.WallpaperService;
 import os.process.OSKernel;
 import os.process.OSProcess;
 import os.process.ProcessListener;
@@ -46,18 +47,20 @@ public class DesktopController implements ProcessListener {
     private final Map<Integer, OSApplication> applications = new HashMap<>();
     private final FlowPane iconPane = new FlowPane(10, 10);
     private StackPane appDrawerOverlay;
+    private final WallpaperService wallpaperService;
 
-    public DesktopController(OSKernel kernel, Runnable logoutHandler) {
+    public DesktopController(OSKernel kernel, Runnable logoutHandler, WallpaperService wallpaperService) {
         this.kernel = kernel;
         this.logoutHandler = logoutHandler;
+        this.wallpaperService = wallpaperService;
         this.kernel.addProcessListener(this);
         this.taskbar = new TaskbarController(this::openAppDrawer);
         setupLayout();
         setupIcons();
+        refreshWallpaper();
     }
 
     private void setupLayout() {
-        desktopArea.setStyle("-fx-background-color: linear-gradient(#1b2838, #0f2027);");
         desktopArea.setPrefSize(1000, 700);
         iconPane.setPadding(new Insets(15));
         desktopArea.getChildren().add(iconPane);
@@ -85,7 +88,9 @@ public class DesktopController implements ProcessListener {
         iconPane.getChildren().add(createIcon("System Monitor", () ->
                 launchApplication("System Monitor", () -> new SystemMonitorApp(kernel), 256, 180, 320)));
         iconPane.getChildren().add(createIcon("Settings", () ->
-                launchApplication("Settings", () -> new SettingsApp(kernel, logoutHandler), 64, 48, 120)));
+                launchApplication("Settings",
+                        () -> new SettingsApp(kernel, logoutHandler, wallpaperService, this::refreshWallpaper),
+                        64, 48, 120)));
     }
 
     private Node createIcon(String title, Runnable action) {
@@ -191,7 +196,9 @@ public class DesktopController implements ProcessListener {
                 () -> launchApplication("System Monitor", () -> new SystemMonitorApp(kernel), 256, 180, 320)));
 
         list.getChildren().add(createDrawerButton("Settings",
-                () -> launchApplication("Settings", () -> new SettingsApp(kernel, logoutHandler), 64, 48, 120)));
+                () -> launchApplication("Settings",
+                        () -> new SettingsApp(kernel, logoutHandler, wallpaperService, this::refreshWallpaper),
+                        64, 48, 120)));
 
         list.setStyle("-fx-background-color: #2d2d2d; -fx-background-radius: 8;"
                 + "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.7), 20, 0, 0, 4);");
@@ -229,6 +236,15 @@ public class DesktopController implements ProcessListener {
             centerLayer.getChildren().remove(appDrawerOverlay);
         }
         appDrawerOverlay = null;
+    }
+
+    /**
+     * Re-applies the wallpaper based on the currently authenticated user.
+     * Call this after login/logout or when a user changes their preference.
+     */
+    public void refreshWallpaper() {
+        UserAccount current = kernel.getAuthManager().getCurrentUser();
+        wallpaperService.applyWallpaper(desktopArea, current);
     }
 
     public Parent getView() {

@@ -4,9 +4,12 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import os.gui.wallpaper.WallpaperService;
+import os.gui.wallpaper.WallpaperService.WallpaperOption;
 import os.process.OSKernel;
 import os.users.AuthManager;
 import os.users.UserAccount;
@@ -20,12 +23,21 @@ public class SettingsApp implements OSApplication {
 
     private final OSKernel kernel;
     private final Runnable onLogoutRequested;
+    private final WallpaperService wallpaperService;
+    private final Runnable onWallpaperChanged;
     private BorderPane root;
     private ListView<UserAccount> userListView;
+    private ComboBox<WallpaperOption> wallpaperBox;
+    private ImageView wallpaperPreview;
 
-    public SettingsApp(OSKernel kernel, Runnable onLogoutRequested) {
+    public SettingsApp(OSKernel kernel,
+                       Runnable onLogoutRequested,
+                       WallpaperService wallpaperService,
+                       Runnable onWallpaperChanged) {
         this.kernel = kernel;
         this.onLogoutRequested = onLogoutRequested;
+        this.wallpaperService = wallpaperService;
+        this.onWallpaperChanged = onWallpaperChanged;
     }
 
     @Override
@@ -89,12 +101,16 @@ public class SettingsApp implements OSApplication {
             roleWarning.setStyle("-fx-text-fill: #ff5555;");
         }
 
+        VBox appearanceBox = buildAppearanceBox(current);
+
         VBox usersBox = new VBox(6,
                 currentUserLabel,
                 roleWarning,
                 new Label("User accounts"),
                 userListView,
-                userButtons);
+                userButtons,
+                new Separator(),
+                appearanceBox);
         usersBox.setPadding(new Insets(10));
 
         root = new BorderPane();
@@ -144,6 +160,89 @@ public class SettingsApp implements OSApplication {
             auth.addUser(account);
             userListView.getItems().setAll(auth.getUsers());
         });
+    }
+
+    private VBox buildAppearanceBox(UserAccount current) {
+        Label title = new Label("Appearance");
+        title.setStyle("-fx-font-weight: bold;");
+
+        Label subtitle = new Label(current != null
+                ? "Desktop wallpaper for " + current.getUsername()
+                : "Log in to customize wallpapers.");
+
+        wallpaperBox = new ComboBox<>();
+        wallpaperBox.setPrefWidth(320);
+        wallpaperBox.setCellFactory(list -> new ListCell<>() {
+            @Override
+            protected void updateItem(WallpaperOption item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : item.displayName());
+            }
+        });
+        wallpaperBox.setButtonCell(new ListCell<>() {
+            @Override
+            protected void updateItem(WallpaperOption item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : item.displayName());
+            }
+        });
+        wallpaperBox.getItems().setAll(wallpaperService.getWallpaperOptions());
+        WallpaperOption initial = current != null
+                ? findOption(current.getPreferredWallpaper())
+                : null;
+        if (initial != null) {
+            wallpaperBox.getSelectionModel().select(initial);
+        } else if (!wallpaperBox.getItems().isEmpty()) {
+            wallpaperBox.getSelectionModel().selectFirst();
+        }
+
+        wallpaperPreview = new ImageView();
+        wallpaperPreview.setFitWidth(220);
+        wallpaperPreview.setPreserveRatio(true);
+        wallpaperPreview.setSmooth(true);
+        wallpaperPreview.setStyle("-fx-border-color: #444; -fx-border-radius: 4;");
+        updatePreview(wallpaperBox.getSelectionModel().getSelectedItem());
+        wallpaperBox.valueProperty().addListener((obs, oldVal, newVal) -> updatePreview(newVal));
+
+        Button applyButton = new Button("Apply wallpaper");
+        applyButton.setDisable(current == null);
+        applyButton.setOnAction(e -> applyWallpaperSelection(current));
+
+        VBox appearance = new VBox(8, title, subtitle, wallpaperBox, wallpaperPreview, applyButton);
+        appearance.setPadding(new Insets(8, 0, 0, 0));
+        return appearance;
+    }
+
+    private void updatePreview(WallpaperOption option) {
+        if (option == null) {
+            wallpaperPreview.setImage(null);
+            return;
+        }
+        wallpaperPreview.setImage(wallpaperService.loadPreview(option.fileName(), 220, 130));
+    }
+
+    private WallpaperOption findOption(String fileName) {
+        if (fileName == null) {
+            return null;
+        }
+        for (WallpaperOption option : wallpaperBox.getItems()) {
+            if (option.fileName().equalsIgnoreCase(fileName)) {
+                return option;
+            }
+        }
+        return null;
+    }
+
+    private void applyWallpaperSelection(UserAccount current) {
+        WallpaperOption option = wallpaperBox.getSelectionModel().getSelectedItem();
+        if (current == null || option == null) {
+            return;
+        }
+        current.setPreferredWallpaper(option.fileName());
+        kernel.getAuthManager().updateUser(current);
+        if (onWallpaperChanged != null) {
+            onWallpaperChanged.run();
+        }
     }
 
     private void removeSelectedUser() {

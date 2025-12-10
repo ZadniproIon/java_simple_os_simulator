@@ -10,20 +10,32 @@ import java.util.Objects;
  */
 public class UserAccount {
 
+    public static final String DEFAULT_WALLPAPER = "macos-catalina-mountains-island-daytime-stock-5k-6016x6016-188.jpg";
+
     private final String username;
     private final String passwordHash;
     private final UserRole role;
     private final String homeDirectory;
+    private String preferredWallpaper;
 
     public UserAccount(String username, String rawPassword, UserRole role) {
         this(username, rawPassword, role, "/home/" + Objects.requireNonNull(username, "username"));
     }
 
     public UserAccount(String username, String rawPassword, UserRole role, String homeDirectory) {
+        this(username, rawPassword, role, homeDirectory, DEFAULT_WALLPAPER);
+    }
+
+    public UserAccount(String username,
+                       String rawPassword,
+                       UserRole role,
+                       String homeDirectory,
+                       String preferredWallpaper) {
         this.username = Objects.requireNonNull(username, "username");
         this.passwordHash = hashPassword(Objects.requireNonNull(rawPassword, "password"));
         this.role = Objects.requireNonNull(role, "role");
         this.homeDirectory = Objects.requireNonNull(homeDirectory, "homeDirectory");
+        this.preferredWallpaper = preferredWallpaper == null ? DEFAULT_WALLPAPER : preferredWallpaper;
     }
 
     public String getUsername() {
@@ -52,19 +64,37 @@ public class UserAccount {
         return passwordHash.equals(hashPassword(rawPassword));
     }
 
+    public String getPreferredWallpaper() {
+        return preferredWallpaper;
+    }
+
+    public void setPreferredWallpaper(String preferredWallpaper) {
+        this.preferredWallpaper = preferredWallpaper == null ? DEFAULT_WALLPAPER : preferredWallpaper;
+    }
+
     /**
      * Factory method used when re-loading accounts from disk where the
      * password hash is already known.
      */
-    static UserAccount fromHashed(String username, String passwordHash, UserRole role, String homeDirectory) {
-        return new UserAccount(username, passwordHash, role, homeDirectory, true);
+    static UserAccount fromHashed(String username,
+                                  String passwordHash,
+                                  UserRole role,
+                                  String homeDirectory,
+                                  String preferredWallpaper) {
+        return new UserAccount(username, passwordHash, role, homeDirectory, preferredWallpaper, true);
     }
 
-    private UserAccount(String username, String passwordHash, UserRole role, String homeDirectory, boolean preHashed) {
+    private UserAccount(String username,
+                        String passwordHash,
+                        UserRole role,
+                        String homeDirectory,
+                        String preferredWallpaper,
+                        boolean preHashed) {
         this.username = Objects.requireNonNull(username, "username");
         this.passwordHash = Objects.requireNonNull(passwordHash, "passwordHash");
         this.role = Objects.requireNonNull(role, "role");
         this.homeDirectory = Objects.requireNonNull(homeDirectory, "homeDirectory");
+        this.preferredWallpaper = preferredWallpaper == null ? DEFAULT_WALLPAPER : preferredWallpaper;
     }
 
     private String hashPassword(String password) {

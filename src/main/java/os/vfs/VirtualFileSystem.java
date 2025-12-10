@@ -199,11 +199,32 @@ public class VirtualFileSystem {
     }
 
     /**
+     * Exposes the host file system path corresponding to a virtual node.
+     * Useful for components that need to stream binary data such as wallpaper images.
+     */
+    public Path toHostPath(VirtualNode node) {
+        return toRealPath(node);
+    }
+
+    /**
+     * Ensures that the given virtual directory exists on disk and returns it.
+     */
+    public VirtualDirectory ensureDirectory(String virtualPath) {
+        VirtualDirectory directory = resolveDirectory(virtualPath);
+        Path real = toRealPath(directory);
+        try {
+            Files.createDirectories(real);
+        } catch (IOException ignored) {
+        }
+        return directory;
+    }
+
+    /**
      * Ensures that standard directories such as /home, /bin, /etc and /tmp
      * exist under the virtual root.
      */
     private void ensureStandardLayout() {
-        String[] standardDirs = { "home", "bin", "etc", "tmp" };
+        String[] standardDirs = { "home", "bin", "etc", "tmp", "system" };
         for (String dir : standardDirs) {
             Path path = rootPath.resolve(dir);
             try {
