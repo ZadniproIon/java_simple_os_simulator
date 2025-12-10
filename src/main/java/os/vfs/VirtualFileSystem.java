@@ -146,7 +146,11 @@ public class VirtualFileSystem {
      * Returns true if the given virtual file currently exists on disk.
      */
     public boolean exists(VirtualFile file) {
-        Path realPath = toRealPath(file);
+        return exists((VirtualNode) file);
+    }
+
+    public boolean exists(VirtualNode node) {
+        Path realPath = toRealPath(node);
         return Files.exists(realPath);
     }
 

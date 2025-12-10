@@ -193,6 +193,16 @@
     -fx-text-fill: -md3-on-surface;
 }
 
+.terminal-output {
+    -fx-font-family: "Consolas", "Courier New", monospace;
+    -fx-control-inner-background: #1e1e1e;
+    -fx-text-fill: #e0e0e0;
+}
+
+.terminal-input {
+    -fx-font-family: "Consolas", "Courier New", monospace;
+}
+
 .status-bar {
     -fx-background-color: -md3-surface-variant;
     -fx-border-color: transparent;

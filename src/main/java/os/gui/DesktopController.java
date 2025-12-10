@@ -23,6 +23,7 @@ import os.apps.NotepadApp;
 import os.apps.OSApplication;
 import os.apps.SettingsApp;
 import os.apps.SystemMonitorApp;
+import os.apps.TerminalApp;
 import os.apps.TaskManagerApp;
 import os.gui.wallpaper.WallpaperService;
 import os.process.OSKernel;
@@ -91,6 +92,8 @@ public class DesktopController implements ProcessListener {
                 launchApplication("Task Manager", () -> new TaskManagerApp(kernel), 128, 96, 192)));
         iconPane.getChildren().add(createIcon("System Monitor", () ->
                 launchApplication("System Monitor", () -> new SystemMonitorApp(kernel), 256, 180, 320)));
+        iconPane.getChildren().add(createIcon("Terminal", () ->
+                launchApplication("Terminal", () -> new TerminalApp(kernel), 96, 64, 160)));
         iconPane.getChildren().add(createIcon("Settings", () ->
                 launchApplication("Settings",
                         () -> new SettingsApp(kernel, logoutHandler, wallpaperService, this::refreshWallpaper),
@@ -202,6 +205,9 @@ public class DesktopController implements ProcessListener {
 
         list.getChildren().add(createDrawerButton("System Monitor",
                 () -> launchApplication("System Monitor", () -> new SystemMonitorApp(kernel), 256, 180, 320)));
+
+        list.getChildren().add(createDrawerButton("Terminal",
+                () -> launchApplication("Terminal", () -> new TerminalApp(kernel), 96, 64, 160)));
 
         list.getChildren().add(createDrawerButton("Settings",
                 () -> launchApplication("Settings",
