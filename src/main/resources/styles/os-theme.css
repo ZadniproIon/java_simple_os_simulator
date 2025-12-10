@@ -1,0 +1,308 @@
+.root {
+    -md3-primary: #6750A4;
+    -md3-primary-container: #EADDFF;
+    -md3-on-primary: #FFFFFF;
+    -md3-surface: #FFFFFF;
+    -md3-surface-variant: #F5F5F7;
+    -md3-outline: #D0CBE4;
+    -md3-on-surface: #1D1B20;
+    -md3-on-surface-variant: #49454F;
+    -md3-shadow: rgba(29, 27, 32, 0.15);
+    -md3-shadow-strong: rgba(29, 27, 32, 0.25);
+    -md3-error: #B3261E;
+    -md3-success: #2E7D32;
+}
+
+.desktop-root {
+    -fx-background-color: -md3-surface-variant;
+    -fx-font-family: "Segoe UI", "Inter", "Roboto", sans-serif;
+    -fx-padding: 16;
+}
+
+.desktop-icon-grid {
+    -fx-hgap: 16;
+    -fx-vgap: 16;
+}
+
+.desktop-icon, .desktop-icon:focused {
+    -fx-background-color: rgba(255, 255, 255, 0.8);
+    -fx-text-fill: -md3-on-surface;
+    -fx-font-weight: 600;
+    -fx-border-radius: 14;
+    -fx-background-radius: 14;
+    -fx-padding: 16;
+    -fx-effect: dropshadow(gaussian, -md3-shadow, 10, 0.15, 0, 4);
+}
+
+.desktop-icon:hover {
+    -fx-background-color: rgba(255, 255, 255, 1);
+}
+
+.taskbar {
+    -fx-background-color: rgba(255, 255, 255, 0.95);
+    -fx-border-color: transparent transparent rgba(0, 0, 0, 0.08) transparent;
+    -fx-padding: 8 16 8 16;
+    -fx-alignment: center-left;
+    -fx-effect: dropshadow(gaussian, -md3-shadow, 20, 0.3, 0, -2);
+}
+
+.taskbar-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: -md3-on-surface;
+    -fx-font-weight: 600;
+    -fx-border-color: transparent;
+    -fx-border-radius: 999;
+    -fx-background-radius: 999;
+    -fx-padding: 8 14 8 14;
+}
+
+.taskbar-button:hover {
+    -fx-background-color: rgba(103, 80, 164, 0.15);
+}
+
+.taskbar-button:focused {
+    -fx-border-color: -md3-primary;
+}
+
+.taskbar-start {
+    -fx-background-color: -md3-primary;
+    -fx-text-fill: -md3-on-primary;
+    -fx-effect: dropshadow(gaussian, -md3-shadow, 10, 0.4, 0, 2);
+}
+
+.taskbar-apps {
+    -fx-alignment: center;
+}
+
+.taskbar-clock {
+    -fx-text-fill: -md3-on-surface;
+    -fx-font-size: 12px;
+}
+
+.os-window {
+    -fx-background-color: transparent;
+    -fx-effect: dropshadow(gaussian, -md3-shadow-strong, 24, 0.3, 0, 8);
+    -fx-border-radius: 18;
+    -fx-background-radius: 18;
+}
+
+.os-window-titlebar {
+    -fx-background-color: -md3-primary;
+    -fx-background-radius: 18 18 0 0;
+    -fx-padding: 10 16 10 20;
+    -fx-alignment: center-left;
+}
+
+.os-window-title {
+    -fx-text-fill: -md3-on-primary;
+    -fx-font-size: 16px;
+    -fx-font-weight: 600;
+}
+
+.os-window-controls {
+    -fx-spacing: 8;
+}
+
+.window-control {
+    -fx-background-color: rgba(255, 255, 255, 0.25);
+    -fx-text-fill: -md3-on-primary;
+    -fx-border-radius: 999;
+    -fx-background-radius: 999;
+    -fx-min-width: 28;
+    -fx-min-height: 28;
+    -fx-font-weight: bold;
+}
+
+.window-control:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.4);
+}
+
+.window-control.close-control {
+    -fx-background-color: rgba(255, 255, 255, 0.4);
+}
+
+.window-control.close-control:hover {
+    -fx-background-color: rgba(255, 0, 0, 0.6);
+}
+
+.app-surface {
+    -fx-background-color: -md3-surface;
+    -fx-background-radius: 0 0 18 18;
+    -fx-padding: 12;
+}
+
+.top-app-bar {
+    -fx-background-color: transparent;
+    -fx-padding: 0 0 8 0;
+}
+
+.top-app-bar .label {
+    -fx-text-fill: -md3-on-surface;
+    -fx-font-weight: 600;
+}
+
+.card {
+    -fx-background-color: -md3-surface;
+    -fx-background-radius: 16;
+    -fx-padding: 16;
+    -fx-spacing: 12;
+    -fx-effect: dropshadow(gaussian, -md3-shadow, 16, 0.2, 0, 6);
+}
+
+.primary-button {
+    -fx-background-color: -md3-primary;
+    -fx-text-fill: -md3-on-primary;
+    -fx-font-weight: 600;
+    -fx-background-radius: 999;
+    -fx-padding: 8 18 8 18;
+}
+
+.outlined-button {
+    -fx-background-color: transparent;
+    -fx-border-color: -md3-outline;
+    -fx-text-fill: -md3-on-surface;
+    -fx-border-radius: 999;
+    -fx-background-radius: 999;
+    -fx-padding: 8 18 8 18;
+}
+
+.text-editor {
+    -fx-background-color: -md3-surface-variant;
+    -fx-control-inner-background: -md3-surface-variant;
+    -fx-text-fill: -md3-on-surface;
+}
+
+.status-bar {
+    -fx-background-color: -md3-surface-variant;
+    -fx-border-color: transparent;
+    -fx-padding: 6 12 6 12;
+    -fx-background-radius: 0 0 18 18;
+}
+
+.status-caption {
+    -fx-text-fill: -md3-on-surface-variant;
+    -fx-font-size: 12px;
+}
+
+.app-drawer {
+    -fx-background-color: rgba(0, 0, 0, 0.45);
+}
+
+.app-drawer-panel {
+    -fx-background-color: -md3-surface;
+    -fx-background-radius: 28;
+    -fx-padding: 24;
+    -fx-spacing: 12;
+    -fx-effect: dropshadow(gaussian, -md3-shadow, 30, 0.35, 0, 10);
+}
+
+.drawer-button {
+    -fx-background-color: -md3-surface-variant;
+    -fx-text-fill: -md3-on-surface;
+    -fx-font-weight: 600;
+    -fx-background-radius: 16;
+    -fx-padding: 12 20 12 20;
+}
+
+.drawer-button:hover {
+    -fx-background-color: -md3-primary-container;
+}
+
+.caption {
+    -fx-text-fill: -md3-on-surface-variant;
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+}
+
+.section-title {
+    -fx-font-size: 18px;
+    -fx-font-weight: 600;
+    -fx-text-fill: -md3-on-surface;
+    -fx-padding: 0 0 12 0;
+}
+
+.toolbar {
+    -fx-spacing: 10;
+}
+
+.data-table {
+    -fx-background-radius: 16;
+    -fx-effect: dropshadow(gaussian, -md3-shadow, 12, 0.2, 0, 2);
+}
+
+.table-view {
+    -fx-background-color: transparent;
+    -fx-table-cell-border-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.table-view .column-header-background {
+    -fx-background-color: -md3-primary-container;
+    -fx-border-color: transparent;
+}
+
+.table-view .column-header,
+.table-view .column-header .label {
+    -fx-text-fill: -md3-on-surface;
+    -fx-font-weight: 600;
+}
+
+.table-row-cell {
+    -fx-background-color: transparent;
+}
+
+.table-row-cell:selected {
+    -fx-background-color: rgba(103, 80, 164, 0.16);
+}
+
+.sidebar {
+    -fx-background-color: -md3-surface-variant;
+    -fx-background-radius: 16;
+    -fx-padding: 16;
+    -fx-spacing: 12;
+}
+
+.sidebar .label {
+    -fx-text-fill: -md3-on-surface;
+}
+
+.file-list {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.path-bar {
+    -fx-background-color: -md3-surface-variant;
+    -fx-padding: 8 12 8 12;
+    -fx-background-radius: 12;
+}
+
+.login-overlay {
+    -fx-background-color: rgba(0, 0, 0, 0.45);
+}
+
+.login-card {
+    -fx-background-color: -md3-surface;
+    -fx-background-radius: 24;
+    -fx-padding: 24;
+    -fx-spacing: 16;
+    -fx-effect: dropshadow(gaussian, -md3-shadow, 25, 0.3, 0, 8);
+}
+
+.login-card .label {
+    -fx-font-size: 18px;
+    -fx-text-fill: -md3-on-surface;
+}
+
+.login-card .combo-box,
+.login-card .password-field {
+    -fx-background-radius: 12;
+    -fx-background-color: -md3-surface-variant;
+    -fx-text-fill: -md3-on-surface;
+}
+
+.warning-text {
+    -fx-text-fill: #B00020;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}

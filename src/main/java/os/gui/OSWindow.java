@@ -26,41 +26,45 @@ public class OSWindow extends BorderPane {
     private double restoreHeight;
 
     public OSWindow(String title, Node content) {
-        setPrefSize(400, 300);
+        setPrefSize(420, 320);
         // Prevent parent layouts (like StackPane) from stretching the window
         // to fill all available space unless we explicitly maximise it.
         setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
         getStyleClass().add("os-window");
-        setStyle("-fx-border-color: #1e1e1e; -fx-border-width: 1; -fx-background-color: #f3f3f3;");
 
         Label titleLabel = new Label(title);
-        titleLabel.setStyle("-fx-font-weight: bold;");
+        titleLabel.getStyleClass().add("os-window-title");
 
-        Button minimizeButton = new Button("_");
-        minimizeButton.setOnAction(e -> minimize());
-
-        Button maximizeButton = new Button("\u25a1"); // square
-        maximizeButton.setOnAction(e -> toggleMaximize());
-
-        Button closeButton = new Button("X");
-        closeButton.setOnAction(e -> {
+        Button minimizeButton = createControlButton("\u2013", this::minimize);
+        Button maximizeButton = createControlButton("\u25A1", this::toggleMaximize);
+        Button closeButton = createControlButton("\u2715", () -> {
             if (closeHandler != null) {
                 closeHandler.run();
             }
         });
-        HBox titleBar = new HBox(10, titleLabel, createSpacer(), minimizeButton, maximizeButton, closeButton);
-        titleBar.setPadding(new Insets(5));
-        titleBar.setStyle("-fx-background-color: linear-gradient(#4c4c4c, #2b2b2b); -fx-text-fill: white;");
-        titleLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold;");
-        String buttonStyle = "-fx-background-color: #3c3c3c; -fx-text-fill: white; -fx-padding: 2 8 2 8;";
-        minimizeButton.setStyle(buttonStyle);
-        maximizeButton.setStyle(buttonStyle);
-        closeButton.setStyle("-fx-background-color: #aa0000; -fx-text-fill: white; -fx-padding: 2 8 2 8;");
+        closeButton.getStyleClass().add("close-control");
+
+        HBox controls = new HBox(8, minimizeButton, maximizeButton, closeButton);
+        controls.getStyleClass().add("os-window-controls");
+
+        HBox titleBar = new HBox(10, titleLabel, createSpacer(), controls);
+        titleBar.setPadding(new Insets(5, 16, 5, 16));
+        titleBar.getStyleClass().add("os-window-titlebar");
         enableDragging(titleBar);
         setTop(titleBar);
-        setCenter(content);
+
+        javafx.scene.layout.StackPane contentWrapper = new javafx.scene.layout.StackPane(content);
+        contentWrapper.getStyleClass().add("app-surface");
+        setCenter(contentWrapper);
 
         setOnMouseClicked(e -> toFront());
+    }
+
+    private Button createControlButton(String symbol, Runnable action) {
+        Button button = new Button(symbol);
+        button.setOnAction(e -> action.run());
+        button.getStyleClass().add("window-control");
+        return button;
     }
 
     private Region createSpacer() {

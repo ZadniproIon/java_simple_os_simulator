@@ -30,8 +30,8 @@ public class TaskbarController {
 
     public TaskbarController(Runnable onStartMenuRequested) {
         root.setPadding(new Insets(4, 10, 4, 10));
-        root.setStyle("-fx-background-color: #252526;");
         root.setAlignment(Pos.CENTER_LEFT);
+        root.getStyleClass().add("taskbar");
 
         Button startButton = new Button("\u2630"); // hamburger-style icon
         startButton.setOnAction(e -> {
@@ -39,12 +39,13 @@ public class TaskbarController {
                 onStartMenuRequested.run();
             }
         });
-        startButton.setStyle("-fx-background-color: #007acc; -fx-text-fill: white; -fx-font-weight: bold;");
+        startButton.getStyleClass().addAll("taskbar-button", "taskbar-start");
 
         appButtonsBox.setAlignment(Pos.CENTER);
+        appButtonsBox.getStyleClass().add("taskbar-apps");
         HBox.setHgrow(appButtonsBox, Priority.ALWAYS);
 
-        clockLabel.setStyle("-fx-text-fill: white; -fx-font-size: 11px;");
+        clockLabel.getStyleClass().add("taskbar-clock");
 
         root.getChildren().addAll(startButton, appButtonsBox, clockLabel);
 
@@ -67,7 +68,7 @@ public class TaskbarController {
     public void addProcess(OSProcess process, Runnable focusAction) {
         Button button = new Button(process.getName());
         button.setOnAction(e -> focusAction.run());
-        button.setStyle("-fx-background-color: #3c3c3c; -fx-text-fill: white;");
+        button.getStyleClass().addAll("taskbar-button");
         buttons.put(process.getPid(), button);
         appButtonsBox.getChildren().add(button);
     }

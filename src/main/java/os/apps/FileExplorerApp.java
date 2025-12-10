@@ -62,6 +62,7 @@ public class FileExplorerApp implements OSApplication {
             return root;
         }
         listView = new ListView<>();
+        listView.getStyleClass().add("file-list");
         listView.setCellFactory(list -> new ListCell<>() {
             @Override
             protected void updateItem(Object item, boolean empty) {
@@ -88,16 +89,20 @@ public class FileExplorerApp implements OSApplication {
         });
 
         Button upButton = new Button("Up");
+        upButton.getStyleClass().add("outlined-button");
         upButton.setOnAction(e -> navigateUp());
         Button newFileButton = new Button("New File");
+        newFileButton.getStyleClass().add("outlined-button");
         newFileButton.setOnAction(e -> createNewFile());
         Button newDirButton = new Button("New Folder");
+        newDirButton.getStyleClass().add("outlined-button");
         newDirButton.setOnAction(e -> createNewDirectory());
         Button deleteButton = new Button("Delete");
+        deleteButton.getStyleClass().add("outlined-button");
         deleteButton.setOnAction(e -> deleteSelected());
 
-        HBox toolbar = new HBox(10, upButton, newFileButton, newDirButton, deleteButton);
-        toolbar.setPadding(new Insets(4, 10, 10, 10));
+        VBox actionBox = new VBox(10, upButton, newFileButton, newDirButton, deleteButton);
+        actionBox.setFillWidth(true);
 
         Label roleLabel = new Label();
         if (isAdmin) {
@@ -108,22 +113,29 @@ public class FileExplorerApp implements OSApplication {
         } else {
             roleLabel.setText("Guest mode: limited access.");
         }
-        roleLabel.setStyle("-fx-text-fill: #ffcc66; -fx-font-size: 11px;");
+        roleLabel.getStyleClass().add("warning-text");
 
-        VBox topBox = new VBox(2, roleLabel, toolbar);
-        topBox.setPadding(new Insets(8, 0, 0, 0));
+        VBox sidebar = new VBox(16, roleLabel, actionBox);
+        sidebar.getStyleClass().add("sidebar");
+        sidebar.setPrefWidth(220);
 
         pathLabel = new Label();
         pathLabel.setTextOverrun(OverrunStyle.LEADING_ELLIPSIS);
         pathLabel.setMaxWidth(Double.MAX_VALUE);
-        HBox pathBar = new HBox(6, new Label("Path:"), pathLabel);
-        pathBar.setPadding(new Insets(4, 8, 4, 8));
+        Label pathText = new Label("Current path");
+        pathText.getStyleClass().add("caption");
+        HBox pathBar = new HBox(6, pathText, pathLabel);
+        pathBar.getStyleClass().add("path-bar");
         HBox.setHgrow(pathLabel, Priority.ALWAYS);
 
+        VBox contentBox = new VBox(12, pathBar, listView);
+        contentBox.getStyleClass().add("card");
+        contentBox.setPadding(new Insets(12));
+
         root = new BorderPane();
-        root.setTop(topBox);
-        root.setCenter(listView);
-        root.setBottom(pathBar);
+        root.setPadding(new Insets(12));
+        root.setLeft(sidebar);
+        root.setCenter(contentBox);
 
         refreshListing();
         return root;

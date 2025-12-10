@@ -60,6 +60,7 @@ public class TaskManagerApp implements OSApplication {
             return root;
         }
         tableView = new TableView<>();
+        tableView.getStyleClass().add("data-table");
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
         TableColumn<OSProcess, Number> pidColumn = new TableColumn<>("PID");
@@ -80,7 +81,8 @@ public class TaskManagerApp implements OSApplication {
 
         tableView.getColumns().addAll(pidColumn, nameColumn, stateColumn, memoryColumn, uptimeColumn);
 
-        Button killButton = new Button("Kill Process");
+        Button killButton = new Button("End task");
+        killButton.getStyleClass().add("primary-button");
         killButton.setOnAction(e -> killSelectedProcess());
 
         algorithmBox = new ComboBox<>();
@@ -103,6 +105,7 @@ public class TaskManagerApp implements OSApplication {
                 killButton);
         schedulerControls.setAlignment(Pos.CENTER_LEFT);
         schedulerControls.setPadding(new Insets(8));
+        schedulerControls.getStyleClass().add("toolbar");
 
         ganttBox = new HBox(2);
         ganttBox.setPadding(new Insets(4, 8, 8, 8));
@@ -112,8 +115,12 @@ public class TaskManagerApp implements OSApplication {
                 schedulerControls,
                 ganttBox);
 
+        Label heading = new Label("System processes");
+        heading.getStyleClass().add("section-title");
+
         root = new BorderPane(tableView);
-        root.setTop(new Label("Running processes"));
+        root.setPadding(new Insets(12));
+        root.setTop(heading);
         root.setBottom(bottom);
 
         refreshTimeline = new Timeline(new KeyFrame(javafx.util.Duration.seconds(1), event -> refresh()));

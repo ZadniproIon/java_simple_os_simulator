@@ -61,8 +61,10 @@ public class DesktopController implements ProcessListener {
     }
 
     private void setupLayout() {
+        desktopArea.getStyleClass().add("desktop-root");
         desktopArea.setPrefSize(1000, 700);
         iconPane.setPadding(new Insets(15));
+        iconPane.getStyleClass().add("desktop-icon-grid");
         desktopArea.getChildren().add(iconPane);
         centerLayer.getChildren().add(desktopArea);
         root.setCenter(centerLayer);
@@ -97,7 +99,7 @@ public class DesktopController implements ProcessListener {
         Button button = new Button(title);
         button.setPrefSize(120, 80);
         button.setWrapText(true);
-        button.setStyle("-fx-background-color: rgba(255,255,255,0.2); -fx-text-fill: white; -fx-font-weight: bold;");
+        button.getStyleClass().add("desktop-icon");
         button.setOnMouseClicked(event -> {
             if (event.getClickCount() == 2) {
                 action.run();
@@ -173,6 +175,7 @@ public class DesktopController implements ProcessListener {
         list.setPadding(new Insets(15));
         list.setPrefSize(400, 400);
         list.setMaxSize(400, 400);
+        list.getStyleClass().add("app-drawer-panel");
 
         list.getChildren().add(createDrawerButton("Notepad",
                 () -> launchApplication("Notepad", () -> new NotepadApp(kernel.getFileSystem()), 48, 32, 96)));
@@ -200,11 +203,8 @@ public class DesktopController implements ProcessListener {
                         () -> new SettingsApp(kernel, logoutHandler, wallpaperService, this::refreshWallpaper),
                         64, 48, 120)));
 
-        list.setStyle("-fx-background-color: #2d2d2d; -fx-background-radius: 8;"
-                + "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.7), 20, 0, 0, 4);");
-
         appDrawerOverlay = new StackPane();
-        appDrawerOverlay.setStyle("-fx-background-color: rgba(0,0,0,0.6);");
+        appDrawerOverlay.getStyleClass().add("app-drawer");
         appDrawerOverlay.getChildren().add(list);
         StackPane.setAlignment(list, javafx.geometry.Pos.CENTER);
 
@@ -227,7 +227,7 @@ public class DesktopController implements ProcessListener {
             closeAppDrawerOverlay();
             action.run();
         });
-        button.setStyle("-fx-background-color: #3c3c3c; -fx-text-fill: white;");
+        button.getStyleClass().add("drawer-button");
         return button;
     }
 

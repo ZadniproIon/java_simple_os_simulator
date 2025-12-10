@@ -50,7 +50,9 @@ public class NotepadApp implements OSApplication {
         }
         textArea = new TextArea();
         textArea.textProperty().addListener((obs, oldText, newText) -> reportMemoryUsage(newText));
+        textArea.getStyleClass().add("text-editor");
         statusText = new Text("Ready");
+        statusText.getStyleClass().add("status-caption");
 
         MenuItem openItem = new MenuItem("Open...");
         openItem.setOnAction(e -> openFileDialog());
@@ -63,6 +65,7 @@ public class NotepadApp implements OSApplication {
         fileMenu.getItems().addAll(openItem, saveItem, saveAsItem);
 
         MenuBar menuBar = new MenuBar(fileMenu);
+        menuBar.getStyleClass().add("top-app-bar");
 
         BorderPane layout = new BorderPane();
         layout.setTop(menuBar);
@@ -70,6 +73,7 @@ public class NotepadApp implements OSApplication {
         BorderPane statusBar = new BorderPane();
         statusBar.setPadding(new Insets(4));
         statusBar.setLeft(statusText);
+        statusBar.getStyleClass().add("status-bar");
         layout.setBottom(statusBar);
         root = layout;
 

@@ -59,6 +59,7 @@ public class MainApp extends Application {
 
         StackPane root = new StackPane(desktopController.getView(), loginOverlay);
         Scene scene = new Scene(root, 1200, 800);
+        scene.getStylesheets().add(getClass().getResource("/styles/os-theme.css").toExternalForm());
         primaryStage.setScene(scene);
         primaryStage.show();
 

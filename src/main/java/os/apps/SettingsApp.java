@@ -69,8 +69,10 @@ public class SettingsApp implements OSApplication {
         });
 
         Button addUserButton = new Button("Add User");
+        addUserButton.getStyleClass().add("outlined-button");
         addUserButton.setOnAction(e -> showAddUserDialog());
         Button removeUserButton = new Button("Remove User");
+        removeUserButton.getStyleClass().add("outlined-button");
         removeUserButton.setOnAction(e -> removeSelectedUser());
         // Only administrators may create or remove users.
         boolean isAdmin = current != null && current.getRole() == UserRole.ADMIN;
@@ -80,6 +82,7 @@ public class SettingsApp implements OSApplication {
         }
 
         Button logoutButton = new Button("Log out current user");
+        logoutButton.getStyleClass().add("primary-button");
         logoutButton.setOnAction(e -> {
             auth.logout();
             if (onLogoutRequested != null) {
@@ -94,11 +97,12 @@ public class SettingsApp implements OSApplication {
         Label currentUserLabel = new Label(current != null
                 ? "Current user: " + current.getUsername() + " (" + current.getRole() + ")"
                 : "Current user: <none>");
+        currentUserLabel.getStyleClass().add("section-title");
 
         Label roleWarning = new Label();
         if (!isAdmin) {
             roleWarning.setText("You are a STANDARD user. Some settings are read-only.");
-            roleWarning.setStyle("-fx-text-fill: #ff5555;");
+            roleWarning.getStyleClass().add("warning-text");
         }
 
         VBox appearanceBox = buildAppearanceBox(current);
@@ -114,9 +118,12 @@ public class SettingsApp implements OSApplication {
         usersBox.setPadding(new Insets(10));
 
         root = new BorderPane();
+        root.setPadding(new Insets(12));
         root.setCenter(usersBox);
-        root.setTop(new Label("System Settings"));
-        BorderPane.setMargin(root.getTop(), new Insets(8));
+        Label title = new Label("System Settings");
+        title.getStyleClass().add("section-title");
+        root.setTop(title);
+        BorderPane.setMargin(title, new Insets(0, 0, 8, 0));
         return root;
     }
 
@@ -205,6 +212,7 @@ public class SettingsApp implements OSApplication {
         wallpaperBox.valueProperty().addListener((obs, oldVal, newVal) -> updatePreview(newVal));
 
         Button applyButton = new Button("Apply wallpaper");
+        applyButton.getStyleClass().add("primary-button");
         applyButton.setDisable(current == null);
         applyButton.setOnAction(e -> applyWallpaperSelection(current));
 

@@ -36,28 +36,27 @@ public class LoginOverlay extends StackPane {
         this.authManager = kernel.getAuthManager();
         this.onLoginSuccess = onLoginSuccess;
 
-        setStyle("-fx-background-color: #202020;");
+        getStyleClass().add("login-overlay");
         setPadding(new Insets(40));
 
         VBox card = new VBox(12);
         card.setAlignment(Pos.CENTER);
         card.setPadding(new Insets(20));
-        card.setPrefWidth(500);
-        card.setPrefHeight(500);
-        card.setMaxWidth(500);
-        card.setMaxHeight(500);
-        card.setStyle("-fx-background-color: #2d2d2d; -fx-background-radius: 8;"
-                + "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.6), 20, 0, 0, 4);");
+        card.setPrefWidth(420);
+        card.setPrefHeight(420);
+        card.setMaxWidth(420);
+        card.setMaxHeight(420);
+        card.getStyleClass().add("login-card");
 
         Label title = new Label("Welcome");
         title.setFont(Font.font(20));
-        title.setTextFill(Color.WHITE);
+        title.setTextFill(Color.web("#1D1B20"));
 
         refreshUsers();
         userBox.setPromptText("Select user");
         userBox.setCellFactory(list -> new UserCell());
         userBox.setButtonCell(new UserCell());
-        userBox.setStyle("-fx-background-color: #3c3c3c; -fx-text-fill: white;");
+        userBox.getStyleClass().add("combo-box");
 
         passwordField.setPromptText("Password");
 
@@ -65,7 +64,7 @@ public class LoginOverlay extends StackPane {
         loginButton.setDefaultButton(true);
         loginButton.setOnAction(e -> attemptLogin());
 
-        statusLabel.setTextFill(Color.LIGHTGRAY);
+        statusLabel.getStyleClass().add("status-caption");
 
         card.getChildren().addAll(title, userBox, passwordField, loginButton, statusLabel);
         getChildren().add(card);
