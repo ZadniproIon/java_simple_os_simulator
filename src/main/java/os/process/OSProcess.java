@@ -21,6 +21,7 @@ public class OSProcess {
     private int allocatedMemory;
     private long cpuTimeUsed;
     private int estimatedBurstTime = 10;
+    private final long startTimestamp = System.currentTimeMillis();
 
     private int minSimulatedMemory;
     private int maxSimulatedMemory;
@@ -70,6 +71,10 @@ public class OSProcess {
 
     public long getCpuTimeUsed() {
         return cpuTimeUsed;
+    }
+
+    public long getStartTimestamp() {
+        return startTimestamp;
     }
 
     /**

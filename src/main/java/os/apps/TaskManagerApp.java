@@ -1,5 +1,6 @@
 package os.apps;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,7 +24,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
-import javafx.util.Duration;
 import os.process.OSKernel;
 import os.process.OSProcess;
 import os.process.Scheduler;
@@ -74,10 +74,11 @@ public class TaskManagerApp implements OSApplication {
         TableColumn<OSProcess, Number> memoryColumn = new TableColumn<>("Memory (MB)");
         memoryColumn.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getSimulatedMemoryUsage()));
 
-        TableColumn<OSProcess, Number> cpuColumn = new TableColumn<>("CPU Ticks");
-        cpuColumn.setCellValueFactory(data -> new SimpleIntegerProperty((int) data.getValue().getCpuTimeUsed()));
+        TableColumn<OSProcess, String> uptimeColumn = new TableColumn<>("Uptime");
+        uptimeColumn.setCellValueFactory(data -> new SimpleStringProperty(
+                formatDuration(Duration.ofMillis(System.currentTimeMillis() - data.getValue().getStartTimestamp()))));
 
-        tableView.getColumns().addAll(pidColumn, nameColumn, stateColumn, memoryColumn, cpuColumn);
+        tableView.getColumns().addAll(pidColumn, nameColumn, stateColumn, memoryColumn, uptimeColumn);
 
         Button killButton = new Button("Kill Process");
         killButton.setOnAction(e -> killSelectedProcess());
@@ -115,7 +116,7 @@ public class TaskManagerApp implements OSApplication {
         root.setTop(new Label("Running processes"));
         root.setBottom(bottom);
 
-        refreshTimeline = new Timeline(new KeyFrame(Duration.seconds(1), event -> refresh()));
+        refreshTimeline = new Timeline(new KeyFrame(javafx.util.Duration.seconds(1), event -> refresh()));
         refreshTimeline.setCycleCount(Timeline.INDEFINITE);
         refreshTimeline.play();
 
@@ -147,6 +148,18 @@ public class TaskManagerApp implements OSApplication {
             }
             ganttBox.getChildren().add(rect);
         }
+    }
+
+    private String formatDuration(Duration duration) {
+        long seconds = duration.getSeconds();
+        long absSeconds = Math.abs(seconds);
+        long hours = absSeconds / 3600;
+        long minutes = (absSeconds % 3600) / 60;
+        long secs = absSeconds % 60;
+        if (hours > 0) {
+            return String.format("%02dh %02dm %02ds", hours, minutes, secs);
+        }
+        return String.format("%02dm %02ds", minutes, secs);
     }
 
     private Color colorForPid(int pid) {
